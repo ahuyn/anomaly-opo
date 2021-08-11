@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    <string id="st_no_helm">
+        <text>Helmet not compatible with outfit.</text>
+    </string>
+    <string id="st_no_helmkit">
+        <text>You require a helmet repair kit to replace the helmet.</text>
+    </string>
+    <string id="st_helm_success">
+        <text>Helmet swapped successfully.</text>
+    </string>
+    <string id="ui_inv_max_condition">
+        <text>Max condition</text>
+    </string>
+    <string id="st_part_repaired">
+        <text>%s has been repaired to %s% condition.</text>
+    </string>
+    <string id="st_dot">
+        <text>•</text>
+    </string>
+    
+    <string id="st_total_repair">
+        <text>total condition restored to suit parts:</text>
+    </string>
+
+    <string id="st_can_repair">
+        <text>can repair following components of suit:</text>
+    </string>
+    <string id="st_type_prt_o_fabrics">
+        <text>fabrics</text>
+    </string>
+    <string id="st_type_prt_o_ballistic">
+        <text>ballistics</text>
+    </string>
+    <string id="st_type_prt_o_retardant">
+        <text>retardants</text>
+    </string>
+    <string id="st_type_prt_o_support">
+        <text>exoskeleton frames</text>
+    </string>
+    
+	<string id="ui_mcm_outfit_title">
+		<text>Outfit Parts Overhaul</text>
+	</string>
+	<string id="ui_mcm_menu_outfit">
+		<text>Outfit Parts Overhaul</text>
+	</string>
+	<string id="ui_mcm_outfit_damage">
+		<text>Part damage multiplier</text>
+	</string>
+	<string id="ui_mcm_outfit_damage_desc">
+		<text>Multiplier on how much damage your outfit parts take.</text>
+	</string>
+
+    
+	<string id="st_outfit_repair_guide">
+		<text>Manual of body armor repair</text>
+	</string>
+	<string id="st_outfit_repair_guide_desc">
+		<text>Soldier!\n\n
+            The only thing stopping those bullets fr
+        </text>
+	</string>
+</string_table>

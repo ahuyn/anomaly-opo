@@ -1,0 +1,66 @@
+Revamps outfit degradation and repair.
+1.0.8 - Projected max condition is displayed in repair screen now.
+1.0.7 - Parts damage modifier can now be changed in MCM. Fixed small issue where information on repair wasn't sent to user.
+1.0.6.2 - Fixed the annoying issue where max condition didn't reset after workshop repair.
+1.0.6.1 - Adjusted parts damage multipliers so parts can't die faster than the suit now. To compensate, nerfed sewing kits.
+1.0.6 - Restricted usage of low quality repair items on more expensive armors. Removed redundant messages on repair. Added more information in descriptions for repair items.
+1.0.5 - RUS translation from Oleg Beon
+1.0.4 - Increased wear on outfits, hopefully advanced armor should get some dings in there now. Rebalanced pricing and restoration on outfit repair items.
+1.0.3 - Monkey patched out dependencies where possible. 
+1.0.2 - Tweaks to script for efficiency and to not clog the console. Buffed armor repair for items that were disproportionately expensive with the new changes.
+1.0.1 - Added some rounding up to the max condition. Changed sewing thread and field repair kit to replace no condition, requiring spare parts to be useful, but increased uses to 5.. This should make the grind for parts harder.
+
+Motivation:
+Why the hell can't we just glue together suits we find off people? Why are repair breakpoints so arbitrary for outfits? This addon fixes those annoyances.
+
+Recommended to use full condition parts.
+
+Features
+Outfit max condition:
+- Outfits can be repaired from 0% with any repair item.
+- Outfits have a max condition dependent on the conditions of the parts.
+- The max condition is 20% + (average of all parts) * 80%.
+- Attempting to repair past this threshold with repair items will result in being capped at the max condition.
+
+Outfit damage:
+- Damage to the outfit will degrade parts conditions. This is based on outfit immunitites.
+- Different damage types affect outfit parts differently. Getting mauled by a Pseudodog will shred your fabrics but your armor plates should be reasonably intact. Acid will melt through your armor plates but your retardant components should resist the damage well. Electricity won't do much structural damage but will absolutely destroy your exo frames.
+- Outfit condition does not affect how much damage the parts take.
+
+Component repair:
+- Sewing thread and field armor toolkit do nothing by themselves. Repairing components will need other components. Uses are increased to compensate.
+
+Outfit repair:
+- Parts in the outfit can, in addition to being replaced, be repaired with certain repair items.
+- Heavier armors can't be fixed with basic glues and sewing kits. Stronger stuff is needed.
+- Generally speaking, glue and emergency armor repair are good for patch jobs and nothing else. Sewing kits can fix fabrics. Repair kits fix everything.
+- How this works is, when a repair item is used, the amount of "total condition restored" (rightmost column) is restored to parts eligible under "can repair".
+- For example, say you have leather jacket with fabric 1 at 50%, fabric 2 at 60%, fabric 3 at 100%. If you use advanced sewing kit to fix the jacket, fabric 1 will gain 50% condition and be set to 100%, fabric 2 will gain 25% condition and be set at 85%.
+- Repair will always prioritize the parts it can repair first. If using a repair kit on an item with damaged fabrics, retardants and ballistics, it will repair the ballistics first, then retardants, then fabrics.
+- With multiple components of the same type, the condition is applied on a first-come first-serve basis.
+- User will be prompted on what components were restored.
+- Helmets are not repairable through kit. To replace helmets, drag and drop new helmet to outfit with helmet repair kit in inventory. This will consume one charge of the helmet repair kit.
+
+Table of repair items and effectiveness
+
+Repair item      | Can repair                      | Total condition restored |
+-----------------+---------------------------------+--------------------------|
+Basic sewing kit | Fabrics                         |           50%            |
+Adv. sewing kit  | Fabrics, retardants             |           75%            |
+Heavy sewing kit | Fabrics, retardants             |          100%            |
+Repair kit       | Fabrics, retardants, ballistics |          100%            |
+Exo repair kit   | Everything plus exo frames      |          100%            |
+
+
+-- OPTIONAL SECTION
+Armor crafter addon will let you craft ballistic and retardant components out of components you do not need.
+To use:
+Drag a disassembly tool (leatherman, grooming kit, swiss knife) over a component you want to disassemble. You will receive 1-4 of component base parts. Combine 15 and a Field Armor toolkit charge at a workbench with Advanced tools. Recipes are scattered between Mechanics manuals.
+This mini-addon works standalone and conflicts with other craft overhauls.
+-- END OPTIONAL
+
+Changes to existing script files (For merge purposes)
+items_repair.ltx - New values for outfit repair items
+ui_workshop.script - Callback into main script to compute correct repair values for parts replacement.
+
+Compatibility patches for WPO and outfit speed available.

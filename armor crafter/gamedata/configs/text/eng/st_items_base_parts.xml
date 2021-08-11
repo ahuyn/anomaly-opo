@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    <string id="st_prt_o_retardant_basic">
+        <text>Scrap of retardant fabric</text>
+    </string>
+    <string id="st_prt_o_retardant_basic_descr">
+        <text>Small piece of some high-tech fabric used in environmental protection suits. You received this through breaking down some retardant outfit component. Not very useful or valuable by itself, but can probably be combined with other pieces to create a useful component.\n</text>
+    </string>
+
+    <string id="st_prt_o_ballistic_basic">
+        <text>Pieces of body armor</text>
+    </string>
+    <string id="st_prt_o_ballistic_basic_descr">
+        <text>Small ballistic-resistant plates and fabrics. You received this through breaking down some ballistic outfit component. Not very useful or valuable by itself, but can probably be combined with other pieces to create a useful component.\n</text>
+    </string>
+    <string id="st_ui_craft_components">
+        <text>Armor components</text>
+    </string>
+</string_table>

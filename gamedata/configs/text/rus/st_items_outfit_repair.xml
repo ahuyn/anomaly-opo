@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    <string id="st_no_helm">
+        <text>Шлем не совместим с данным костюмом.</text>
+    </string>
+    <string id="st_no_helmkit">
+        <text>Необходим инструмент для ремонта шлемов.</text>
+    </string>
+    <string id="st_helm_success">
+        <text>Шлем успешно заменён.</text>
+    </string>
+    <string id="ui_inv_max_condition">
+        <text>Максимальная прочность</text>
+    </string>
+    <string id="st_part_repaired">
+        <text>%s: прочность восстановлена до %s%.</text>
+    </string>
+</string_table>

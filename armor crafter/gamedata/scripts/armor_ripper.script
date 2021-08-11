@@ -1,0 +1,26 @@
+
+
+function on_item_drag_dropped(tool, component, slot_from, slot_to)
+    local tool_sec = tool:section()
+    -- printf("Dragging %s onto %s", tool_sec, component:section())
+    if not (tool_sec == "leatherman_tool" or tool_sec == "swiss_knife" or tool_sec == "grooming" )then
+        -- printf("Wrong tool")
+        return 
+    end
+    if not(string.find(component:section(), "prt_o_ballistic") or string.find(component:section(), "prt_o_retardant")) then
+        -- printf("Wrong component type")
+        return
+    end
+    local to_spawn = string.find(component:section(), "prt_o_ballistic") and "prt_o_basic_ballistic" or "prt_o_basic_retardant"
+    local amount_to_spawn = math.floor(math.floor(component:condition()*100) / 25)
+    if amount_to_spawn == 0 then amount_to_spawn = 1 end
+    for i=1,amount_to_spawn do
+        alife_create_item(to_spawn, db.actor)
+    end
+    alife_release_id(component:id())
+    utils_item.degrade(tool, 0.05)
+end
+
+function on_game_start()
+	RegisterScriptCallback("ActorMenu_on_item_drag_drop",on_item_drag_dropped)
+end
