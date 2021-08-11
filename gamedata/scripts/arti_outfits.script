@@ -224,6 +224,7 @@ local functor = function(t,a,b)
         return a > b 
     end
 end
+
 function repair_parts(outfit, repair_item)
     local id = outfit:id()
     local sec = outfit:section()
@@ -235,11 +236,13 @@ function repair_parts(outfit, repair_item)
     item_parts.set_parts_con(id, new_outfit_parts)
 end
 
-function apply_parts_repair(outfit_parts, repair_class, print)
+function apply_parts_repair(outfit_parts_original, repair_class, print)
     local remaining_cond = repair_class[1]
     local repairable = repair_class[2]
     local str = ""
-    print_dbg("Using item %s to repair outfit %s. Total condition to be restored: %s", repair_item, sec, remaining_cond)
+    local outfit_parts = {}
+    copy_table(outfit_parts, outfit_parts_original)
+    print_dbg("Total condition to be restored: %s", remaining_cond)
     for k,v in spairs(outfit_parts, functor) do
         if remaining_cond == 0 then
             break
@@ -249,7 +252,7 @@ function apply_parts_repair(outfit_parts, repair_class, print)
                 local restored = remaining_cond > max_restorable and max_restorable or remaining_cond
                 outfit_parts[k] = v + restored
                 remaining_cond = remaining_cond - restored
-                print_dbg("Restored %s condition to %s, remaining condition is %s.", k, outfit_parts[k], remaining_cond)
+                print_dbg("Restored %s condition to %s, condition now %s, remaining condition is %s.", restored, k, outfit_parts[k], remaining_cond)
                 if restored > 0 then
                     local part_name = gc(ini_sys:r_string_ex(k, "inv_name"))
                     local string = strformat(gc("st_part_repaired"), part_name, outfit_parts[k])
