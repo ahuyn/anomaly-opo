@@ -664,7 +664,6 @@ function UIWorkshopRepair:ReplacePart()
 	local tot_con = 0
 	local cnt = 0
 	local active = 0
-	local parts_cond = {}
 	local total_cond = {}
 	for i=1,6 do
 		if self.parts[i] and self.parts[i].sec and (self.parts[i].sec ~= "na") then
@@ -672,13 +671,12 @@ function UIWorkshopRepair:ReplacePart()
 			if self.new_con[i] then
 				t = self.new_con[i].con
 				active = active + 1
-				parts_cond[active] = t
 			end
 			local clr = utils_xml.get_color_con(t)
 			self.itm_con[i]:SetText(clr .. t .. "%")
 			tot_con = tot_con + t --AdjustCon(self.parts[i].sec, t, #self.parts, IsOutfit(self.object))
 			cnt = cnt + 1
-			total_cond[cnt] = t
+			total_cond[self.parts[i].sec] = t
 		end
 	end
 
@@ -686,11 +684,17 @@ function UIWorkshopRepair:ReplacePart()
 	local id = obj:id()
 	local outfit = level.object_by_id(id)
 	-- Calculate total condition and update text
-	tot_con = (arti_outfits and arti_outfits.has_parts(outfit)) and arti_outfits.calc_new_cond(outfit, parts_cond, total_cond) or clamp(math.ceil(tot_con/cnt),0,100)
-	self.itm_con_r:SetText(tot_con .. "%")
-	
+	-- for outfits, display new max condition
+	if arti_outfits and arti_outfits.has_parts(outfit) then
+		tot_con = clamp(math.ceil(outfit:condition() * 100), 0, 100)
+		new_max_cond = arti_outfits.average_cond(total_cond)
+		self.itm_con_r:SetText(tot_con .. "/".. new_max_cond)
+	else
+		tot_con = clamp(math.ceil(tot_con/cnt),0,100)
+		self.itm_con_r:SetText(tot_con .. "%")
+	end	
 	-- Update remaining toolkit count
-	--self:UpdateToolkits(active)
+	-- self:UpdateToolkits(active)
 	
 	-- Hide part inventory
 	self.CC["parts"]:Reset()
@@ -793,21 +797,19 @@ function UIWorkshopRepair:Repair()
 	local sim = alife()
 	local tot_con = 0
 	local cnt = 0
-	local parts_cond = {}
-	local tot_cond = {}
 	if is_not_empty(self.new_con) then
 		for i=1,6 do
 			if self.parts[i] and self.parts[i].sec and (self.parts[i].sec ~= "na") then
 				if self.new_con[i] and self.new_con[i].id then
 					local temp = self.parts[i].con
 					self.parts[i].con = self.new_con[i].con
-					parts_cond[i] = self.new_con[i].con
 					print_ws("- UIWorkshopRepair:Repair() | replaced part spotted | part: %s - condition: %s - order: %s - id: %s", self.parts[i].sec, self.new_con[i].con, i, self.new_con[i].id)
 					
 					-- Release replacement parts
 					if temp < 0 then
 						alife_release_id(self.new_con[i].id)
 					else
+						-- wpo - do not release non-missing parts
 						local part = get_object_by_id(self.new_con[i].id)
 						part:set_condition(temp/100)
 					end
@@ -815,7 +817,6 @@ function UIWorkshopRepair:Repair()
 				
 				tot_con = tot_con + self.parts[i].con --AdjustCon(self.parts[i].sec, self.parts[i].con, #self.parts, IsOutfit(self.object))
 				cnt = cnt + 1
-				tot_cond[cnt] = self.parts[i].con
 				print_ws("/ UIWorkshopRepair:Repair() | total condition calculation | part: %s - condition: %s - order: %s - total sum: %s", self.parts[i].sec, self.parts[i].con, i, tot_con)
 			end
 		end
@@ -842,8 +843,9 @@ function UIWorkshopRepair:Repair()
 	
 	local final_con = (cnt > 0) and (clamp(math.ceil(tot_con/cnt),1,100)/100)
 	local weapon = level.object_by_id(id)
+	-- wpo - do not set conditions for updated weapons
 	if weapon and not IsWeapon(weapon) and final_con and (final_con >= 0) and (final_con <= 1) then
-		-- arti_outfits - do not set outfit condition yet
+		-- arti_outfits - do not set outfit condition, only max condition
 		if not arti_outfits.has_parts(weapon) then
 			weapon:set_condition(final_con) 
 		end
@@ -858,10 +860,6 @@ function UIWorkshopRepair:Repair()
 		result_part_tbl[self.parts[i].sec] = self.parts[i].con
 	end
 	item_parts.set_parts_con(id, result_part_tbl)
-	-- arti_outfits - now we can set the condition
-	if IsOutfit(weapon) and arti_outfits.has_parts(weapon) then
-		arti_outfits.set_new_cond(weapon, parts_cond, tot_cond)
-	end
 	for k,v in pairs(result_part_tbl) do
 		print_ws("~ UIWorkshopRepair:Repair() | item's new part table [%s] = %s",k,v)
 	end

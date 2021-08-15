@@ -373,10 +373,9 @@ local function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     end
 end
 
-
-
+-- UNUSED
 -- return a new condition based on the new parts conditions + old outfit condition
-function calc_new_cond(outfit, new_parts, all_parts)
+function calc_new_cond(outfit, new_parts, all_parts, max_cond)
     local parts = str_explode(ini_parts:r_string_ex("con_parts_list", outfit:section()), ",")
     local max_cond = all_parts and average_cond(all_parts) or get_max_condition(outfit)
     local current_cond = math.floor(outfit:condition() * 100)
@@ -384,7 +383,9 @@ function calc_new_cond(outfit, new_parts, all_parts)
     print_dbg("Outfit: %s. Current condition: %s. Max condition: %s. Condition per part: %s", outfit:section(), current_cond, max_cond, condition_per_part)
     local tot_restored = 0
     for k,v in pairs(new_parts) do
-        tot_restored = tot_restored + math.floor(condition_per_part*v/100)
+        -- update new current condition and max condition
+        local old_cond = all_parts[k]
+        tot_restored = tot_restored + math.floor((condition_per_part*v)/100)
         print_dbg("calc_new_cond: part contribution: %s. total condition restored: %s", v, tot_restored)
     end
     current_cond = current_cond + tot_restored
@@ -491,9 +492,6 @@ function item_repair.UIRepair:OnItemSelect(n)
 	if (n == 1) and self.use_parts then
 		self.cell_item[2]:Reset()
 		self.text_item[2]:SetText("")
-		--self.con_txt[1]:SetText("")
-		--self.con_txt[2]:SetText("")
-		--self.con_txt_base:SetText("")
 	end
 	
 	self.btn_repair:Enable(true)
