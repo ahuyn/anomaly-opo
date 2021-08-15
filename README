@@ -1,4 +1,5 @@
 Revamps outfit degradation and repair.
+1.0.9 - Workshop no longer restores condition, only max condition. This is to balance out otherwise powerful and low-cost suit repairs.
 1.0.8 - Projected max condition is displayed in repair screen now.
 1.0.7 - Parts damage modifier can now be changed in MCM. Fixed small issue where information on repair wasn't sent to user.
 1.0.6.2 - Fixed the annoying issue where max condition didn't reset after workshop repair.
