@@ -48,9 +48,8 @@ local i2m = {
 
 local parts_map = {}
 
-local enable_debug = true
 function print_dbg(text, ...) 
-	if enable_debug then
+	if get_config("debug") then
 		printf("arti_outfits | %s | " .. text, time_global(), ...)
 	end
 end
