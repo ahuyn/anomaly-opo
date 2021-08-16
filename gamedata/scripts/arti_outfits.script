@@ -575,7 +575,7 @@ function item_repair.UIRepair:OnItemSelect(n)
 		local is_part_match = (self.parts_match and sec == obj_1:section())
 		con = is_part_match and obj_n:condition() or ini_sys:r_float_ex(sec,"repair_part_bonus") or self.part_bonus
         local rank = rank_component(sec)
-        if rank == 3 or rank == 4 then con = 0.03 end
+        if (rank == 3 or rank == 4) and not is_part_match then con = 0.03 end
 		con = (game_achievements.has_achievement("mechanized_warfare")) and (con + 0.02) or con
 		con = clamp(math.floor(con*100)*self.parts_multi , 0 , 100)
 	end
