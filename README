@@ -1,4 +1,5 @@
 Revamps outfit degradation and repair.
+1.1 - Miscellaneous outfit parts are now eligible to repair any outfit (appropriate to sewing/repair kit strength). Sewing kits and outfit repair kit max part restoration greatly reduced; this bonus can be restored with using outfit parts, and matching the outfit part to the outfit vastly increases effectiveness. 
 1.0.9 - Workshop no longer restores condition, only max condition. This is to balance out otherwise powerful and low-cost suit repairs.
 1.0.8 - Projected max condition is displayed in repair screen now.
 1.0.7 - Parts damage modifier can now be changed in MCM. Fixed small issue where information on repair wasn't sent to user.
@@ -46,11 +47,11 @@ Table of repair items and effectiveness
 
 Repair item      | Can repair                      | Total condition restored |
 -----------------+---------------------------------+--------------------------|
-Basic sewing kit | Fabrics                         |           50%            |
-Adv. sewing kit  | Fabrics, retardants             |           75%            |
-Heavy sewing kit | Fabrics, retardants             |          100%            |
-Repair kit       | Fabrics, retardants, ballistics |          100%            |
-Exo repair kit   | Everything plus exo frames      |          100%            |
+Basic sewing kit | Fabrics                         |         20-60%           |
+Adv. sewing kit  | Fabrics, retardants             |         30-90%           |
+Heavy sewing kit | Fabrics, retardants             |         40-120%          |
+Repair kit       | Fabrics, retardants, ballistics |         50-150%          |
+Exo repair kit   | Everything plus exo frames      |         50-150%          |
 
 
 -- OPTIONAL SECTION
