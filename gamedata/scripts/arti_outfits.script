@@ -229,7 +229,7 @@ function get_bonus(part, repair_name, outfit_parts)
         -- support item is outfit part - provide up to 30% if non-matching, or 200% if matching
         bonus = outfit_parts[part_name] ~= nil and 2 or 0.3
         bonus = bonus * part_cond
-        if string.find(part_name, "fabrics") then
+        if rank_component(part_name) == 2 then
             bonus = bonus / 3
         end
     end
@@ -266,10 +266,15 @@ end
 function repair_parts(outfit, repair_item, support_part)
     local id = outfit:id()
     local sec = outfit:section()
+    local is_current = id == current_outfit
     print_dbg("Repairing %s with %s and %s", sec, repair_item, support_part and support_part:section() or "none")
     local outfit_parts = get_parts(outfit)
     local new_outfit_parts = apply_parts_repair(outfit_parts, repair_item, support_part, true)
     item_parts.set_parts_con(id, new_outfit_parts)
+    if is_current then
+        empty_table(current_outfit_parts)
+        copy_table(current_outfit_parts, new_outfit_parts)
+    end
 end
 
 function apply_parts_repair(outfit_parts_original, repair_item, support_part, print)
@@ -399,6 +404,7 @@ local function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
         local contribution = (helmet:condition() * 0.8) / (num_parts - 1)
         print_dbg("Helmet contribution to condition: "..contribution)
         outfit:set_condition(outfit:condition() + contribution)
+        cap_condition(outfit)
 
         utils_item.discharge(helmet_kit)
         alife_release_id(helmet:id())
@@ -430,6 +436,7 @@ function calc_new_cond(outfit, new_parts, all_parts, max_cond)
     return current_cond
 end
 
+-- UNUSED
 function set_new_cond(outfit, new_parts, all_parts)
     local cond = calc_new_cond(outfit, new_parts, all_parts)/100
     outfit:set_condition(cond)
@@ -472,7 +479,6 @@ function item_parts.evaluate_parts(obj)
 				end
 			end
 		end
-
 		-- premature terminate if data exists for outfits
 		if data and IsOutfit(obj) and not is_empty(parts)  then return
         else
@@ -529,7 +535,8 @@ function item_repair.UIRepair:InitInventory(n)
 				-- arti_outfits - use any outfit part
 				elseif ((self.parts_sections and self.parts_sections[sec]) or (part_compatible(sec, self.section))) then
 					local part_bonus = ini_sys:r_float_ex(sec,"repair_part_bonus") or self.part_bonus
-                    if string.find(sec, "ballistic") or string.find(sec, "retardant") then part_bonus = 0.03 end
+                    local rank = rank_component(sec)
+                    if rank == 3 or rank == 4 then part_bonus = 0.03 end
 					part_bonus = (game_achievements.has_achievement("mechanized_warfare")) and (part_bonus + 0.02) or part_bonus
 					part_bonus = clamp(math.floor(part_bonus*100)*self.parts_multi , 0 , 100)
 
@@ -567,7 +574,8 @@ function item_repair.UIRepair:OnItemSelect(n)
 	if n == 2 then
 		local is_part_match = (self.parts_match and sec == obj_1:section())
 		con = is_part_match and obj_n:condition() or ini_sys:r_float_ex(sec,"repair_part_bonus") or self.part_bonus
-        if string.find(sec, "ballistic") or string.find(sec, "retardant") then con = 0.03 end
+        local rank = rank_component(sec)
+        if rank == 3 or rank == 4 then con = 0.03 end
 		con = (game_achievements.has_achievement("mechanized_warfare")) and (con + 0.02) or con
 		con = clamp(math.floor(con*100)*self.parts_multi , 0 , 100)
 	end
@@ -612,7 +620,7 @@ function item_repair.UIRepair:OnRepair()
 	local obj_2 = self.CC[2]:GetCell_Selected(true)
 	OnRepair(self)
     if has_parts(obj_1) then
-        arti_outfits.repair_parts(obj_1, self.obj:section(), obj_2) 
+        arti_outfits.repair_parts(obj_1, self.obj:section(), obj_2)
         arti_outfits.cap_condition(obj_1)
     end
 end
