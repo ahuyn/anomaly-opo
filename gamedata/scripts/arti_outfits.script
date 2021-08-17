@@ -269,17 +269,20 @@ function repair_parts(outfit, repair_item, support_part)
     print_dbg("Repairing %s with %s and %s", sec, repair_item, support_part and support_part:section() or "none")
     local outfit_parts = get_parts(outfit)
     local new_outfit_parts = apply_parts_repair(outfit_parts, repair_item, support_part, true)
+    
     item_parts.set_parts_con(id, new_outfit_parts)
-    if is_current then
-        empty_table(current_outfit_parts)
-        copy_table(current_outfit_parts, new_outfit_parts)
+    if is_current then    
+        current_outfit = 0
     end
 end
 
 function apply_parts_repair(outfit_parts_original, repair_item, support_part, print)
     print_dbg("Calculating parts repair with %s and support %s", repair_item, support_part and support_part:section() or "none")
     local repair_class = repair_item_restoration[repair_item]
-    if not repair_class then return outfit_parts_original end
+    if not repair_class then 
+        print_dbg("Repair item does not restore max condition, returning")
+        return outfit_parts_original 
+    end
     local outfit_parts = {}
     copy_table(outfit_parts, outfit_parts_original)
     local remaining_cond = repair_class[1] * get_bonus(support_part, repair_item, outfit_parts)
@@ -624,8 +627,8 @@ function item_repair.UIRepair:OnRepair()
 	local obj_2 = self.CC[2]:GetCell_Selected(true)
 	OnRepair(self)
     if has_parts(obj_1) then
-        arti_outfits.repair_parts(obj_1, self.obj:section(), obj_2)
-        arti_outfits.cap_condition(obj_1)
+        repair_parts(obj_1, self.obj:section(), obj_2)
+        cap_condition(obj_1)
     end
 end
 
