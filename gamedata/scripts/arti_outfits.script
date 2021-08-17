@@ -64,7 +64,7 @@ end
 
 function get_parts(outfit)
     if not has_parts(outfit) then return nil end
-    local outfit_parts = outfit:id() == current_outfit and current_outfit_parts or item_parts.get_parts_con(outfit, nil, true)
+    local outfit_parts = outfit:id() == current_outfit and current_outfit_parts or dup_table(item_parts.get_parts_con(outfit, nil, true))
     return outfit_parts
 end
 
@@ -143,6 +143,13 @@ function actor_on_update()
 
 end
 
+function check_reset_parts(id)
+    if id == current_outfit then
+        current_outfit = 0
+        updated = updated - 1
+    end
+end
+
 -- immunities work in a reverse fashion - damage taken times immunity equals damage to armor. the lower the immunity, the less armor damage you take
 function update_immunities()
     if current_outfit ~= 0 then
@@ -188,7 +195,8 @@ end
 -- advanced/heavy - fabrics and retardants, 50-75%
 -- repairkit - 100% any, 
 local repair_item_restoration = {
-    ["sewing_kit_b"] = {20, {["prt_o_fabrics"] = true}},
+    ["sewing_kit_b"] = {20, {[
+        "prt_o_fabrics"] = true}},
     ["sewing_kit_a"] = {30, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true}},
     ["sewing_kit_h"] = {40,{["prt_o_fabrics"] = true, ["prt_o_retardant"] = true}},
     ["helmet_repair_kit"] = {50, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true}},
@@ -265,15 +273,12 @@ end
 function repair_parts(outfit, repair_item, support_part)
     local id = outfit:id()
     local sec = outfit:section()
-    local is_current = id == current_outfit
     print_dbg("Repairing %s with %s and %s", sec, repair_item, support_part and support_part:section() or "none")
     local outfit_parts = get_parts(outfit)
     local new_outfit_parts = apply_parts_repair(outfit_parts, repair_item, support_part, true)
     
     item_parts.set_parts_con(id, new_outfit_parts)
-    if is_current then    
-        current_outfit = 0
-    end
+    check_reset_parts(id)
 end
 
 function apply_parts_repair(outfit_parts_original, repair_item, support_part, print)
@@ -368,8 +373,7 @@ function cap_condition(outfit)
     if outfit:condition() > outfit_max_condition then
         outfit:set_condition(outfit_max_condition)
     end
-    current_outfit = 0
-    updated = time_global() - 1
+    check_reset_parts(outfit:id())
 end
 
 -- for reattaching helmet, burn one use of helmet repair kit to swap   
@@ -379,7 +383,7 @@ local function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
 
 	local helmet_sec = helmet and helmet:section() or nil
     local outfit_sec = outfit and outfit:section() or nil
-    local outfit_parts = item_parts.get_parts_con(outfit, nil, true)
+    local outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
     local helmet_kit = db.actor:object("helmet_repair_kit")
     if not helmet_kit then
         news_manager.send_tip(db.actor, gc("st_no_helmkit"), nil, "swiss_knife", 6000)
@@ -411,6 +415,8 @@ local function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
 
         utils_item.discharge(helmet_kit)
         alife_release_id(helmet:id())
+        item_parts.set_parts_con(outfit:id(), outfit_parts)
+        check_reset_parts(outfit:id())
         news_manager.send_tip(db.actor, gc("st_helm_success"), nil, "swiss_knife", 6000)
     else
         -- not found, return error

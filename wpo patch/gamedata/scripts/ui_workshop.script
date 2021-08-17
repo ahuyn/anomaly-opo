@@ -860,6 +860,7 @@ function UIWorkshopRepair:Repair()
 		result_part_tbl[self.parts[i].sec] = self.parts[i].con
 	end
 	item_parts.set_parts_con(id, result_part_tbl)
+	arti_outfits.check_reset_parts(id)
 	for k,v in pairs(result_part_tbl) do
 		print_ws("~ UIWorkshopRepair:Repair() | item's new part table [%s] = %s",k,v)
 	end
