@@ -64,16 +64,23 @@ end
 
 function get_parts(outfit)
     if not has_parts(outfit) then return nil end
-    local outfit_parts = outfit:id() == current_outfit and current_outfit_parts or dup_table(item_parts.get_parts_con(outfit, nil, true))
-    return outfit_parts
+    local is_current = outfit:id() == current_outfit and current_outfit_parts
+    if is_current then 
+        return current_outfit_parts
+    else
+        local fetched_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
+        if is_empty(fetched_parts) then
+            -- force re-evaluation if parts are somehow nil
+            item_parts.set_parts_con(outfit:id(), nil)
+            fetched_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
+        end
+        return fetched_parts
+    end
 end
 
 function has_parts(outfit)
     if outfit and IsOutfit(outfit)then
         local parts = ini_parts:r_string_ex("con_parts_list", outfit:section())
-        if parts then 
-            -- print_dbg("Found these parts "..parts)
-        end
 		return parts ~= nil
 	else 
 		return false
@@ -343,6 +350,7 @@ function average_cond(parts)
     local total = 0
     local num = 0
     -- print_dbg("Averaging condition of %s parts", #parts)
+    if not parts or is_empty(parts) then return 100 end
     for k,v in pairs(parts) do
         if is_part(k) then
             -- print_dbg("Adding %s to total condition %s", v, total)
