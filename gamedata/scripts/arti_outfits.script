@@ -96,6 +96,7 @@ end
 local DAMAGE_THRESHOLD = 1
 local function degrade_parts(type, amount, helmet_only)
     print_dbg("Degrading parts, actor took %s amount of %s type damage. Player shot in head? %s", amount, type, helmet_only)
+    if is_empty(current_outfit_parts) then return end
     for k,v in pairs(current_outfit_parts) do
         local rank = rank_component(k)
         print_dbg("Checking damage for component %s", k)
