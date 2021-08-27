@@ -180,7 +180,7 @@ end
 -- if it is lower than certain threshold, ignore it altogether
 -- todo helmet damage should be affected by helmet immunities?
 local DAMAGE_THRESHOLD = 1
-local function degrade_parts(type, amount, helmet_only)
+function degrade_parts(type, amount, helmet_only)
     print_dbg("Degrading parts, actor took %s amount of %s type damage. Player shot in head? %s", amount, type, helmet_only)
     if is_empty(current_outfit_parts) then return end
     for k,v in pairs(current_outfit_parts) do
@@ -395,7 +395,7 @@ function cap_condition(outfit)
 end
 
 -- for reattaching helmet, burn one use of helmet repair kit to swap   
-local function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
+function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     if not has_parts(outfit) then return end
     if not IsHeadgear(helmet) then return end
 
@@ -691,11 +691,11 @@ function ui_item.build_desc_footer(obj, sec, str)
 end
 -- end monke
 
-local function actor_item_to_belt(obj)
+function actor_item_to_belt(obj)
     update_immunities()
 end
 
-local function actor_item_to_slot(obj)
+function actor_item_to_slot(obj)
     if IsOutfit(obj) then
         update_immunities()
     end
