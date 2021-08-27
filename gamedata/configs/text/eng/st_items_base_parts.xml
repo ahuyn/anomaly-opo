@@ -16,4 +16,10 @@
     <string id="st_ui_craft_components">
         <text>Armor components</text>
     </string>
+    <string id="st_ui_scrap">
+        <text>dismantle</text>
+    </string>
+    <string id="st_ui_scrap_batch">
+        <text>dismantle (batch)</text>
+    </string>
 </string_table>

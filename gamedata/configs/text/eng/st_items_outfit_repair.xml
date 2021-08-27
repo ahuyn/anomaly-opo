@@ -51,14 +51,4 @@
 	<string id="ui_mcm_outfit_damage_desc">
 		<text>Multiplier on how much damage your outfit parts take.</text>
 	</string>
-
-    
-	<string id="st_outfit_repair_guide">
-		<text>Manual of body armor repair</text>
-	</string>
-	<string id="st_outfit_repair_guide_desc">
-		<text>Soldier!\n\n
-            The only thing stopping those bullets fr
-        </text>
-	</string>
 </string_table>

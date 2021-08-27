@@ -1,0 +1,146 @@
+local disassembly_table = {
+    ["swiss_knife"] = 0.02,
+    ["grooming"] = 0.02,
+    ["leatherman_tool"] = 0.002,
+}
+
+function is_armor_part(component)
+    return string.find(component:section(), "prt_o_ballistic") or string.find(component:section(), "prt_o_retardant")
+end
+
+function check_rip_armor(part, batch)
+    if is_armor_part(part) then
+        if batch then
+            return "st_ui_scrap_batch"
+        else
+            return "st_ui_scrap"
+        end
+    end
+    return false
+end
+
+function rip_armor(part, batch)
+    local tool = nil
+    for k,v in pairs(disassembly_table) do
+        if not tool and db.actor:object(k) then
+            tool = db.actor:object(k)
+        end
+    end
+    if not tool then 
+        news_manager.send_tip(db.actor, game.translate_string("st_news_dis_items"), nil, "swiss_knife", 6000)
+        return 
+    end
+    if batch then
+        local sec = part:section()
+        local td = {}
+        function itr(temp, item)
+            if item:section() == sec then
+                td[#td+1] = item
+            end
+        end
+        db.actor:iterate_inventory(itr)
+        while not is_empty(td) and tool do
+            local p = table.remove(td)
+            rip_part(p, tool)
+        end
+    else
+        rip_part(part, tool)
+    end
+end
+
+function rip_part(component, tool)
+    local to_spawn = string.find(component:section(), "prt_o_ballistic") and "prt_o_basic_ballistic" or "prt_o_basic_retardant"
+    local amount_to_spawn = math.floor(math.floor(component:condition()*100) / 25)
+    if amount_to_spawn == 0 then amount_to_spawn = 1 end
+    for i=1,amount_to_spawn do
+        alife_create_item(to_spawn, db.actor)
+    end
+    alife_release_id(component:id())
+    utils_item.degrade(tool, disassembly_table[tool:section()])
+end
+
+function on_item_drag_dropped(tool, component, slot_from, slot_to)
+    local tool_sec = tool:section()
+    -- printf("Dragging %s onto %s", tool_sec, component:section())
+    if not (tool_sec == "leatherman_tool" or tool_sec == "swiss_knife" or tool_sec == "grooming" )then
+        -- printf("Wrong tool")
+        return 
+    end
+    if not(string.find(component:section(), "prt_o_ballistic") or string.find(component:section(), "prt_o_retardant")) then
+        -- printf("Wrong component type")
+        return
+    end
+    rip_part(component, tool)
+end
+
+NameCustom = ui_inventory.UIInventory.Name_Custom
+function ui_inventory.UIInventory:Name_Custom(obj, bag, temp, i)
+	obj = self:CheckItem(obj,"Name_Custom " .. i)
+	if i == 3 and is_armor_part(obj) then -- menu field strip
+		return check_rip_armor(obj, false)
+	elseif i == 4 and is_armor_part(obj) then -- check unjam
+		return check_rip_armor(obj, true)
+	else
+		return NameCustom(self, obj, bag, temp, i)
+	end
+end
+
+ActionCustom = ui_inventory.UIInventory.Action_Custom
+function ui_inventory.UIInventory:Action_Custom(obj, bag, temp, i)
+	obj = self:CheckItem(obj,"Action_Custom " .. i)
+	if i == 3 and is_armor_part(obj) then -- menu field strip
+		rip_armor(obj, false)
+	elseif i == 4 and is_armor_part(obj) then -- check unjam
+		rip_armor(obj, true)
+	else
+		ActionCustom(self, obj, bag, temp, i)
+	end
+end
+
+
+
+function on_game_start()
+    workshop_autoinject.add_section(7, "st_ui_craft_components")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_1", "2, recipe_advanced_1,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_2", "2, recipe_advanced_1,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_3", "2, recipe_advanced_1,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_4", "2, recipe_advanced_1,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_5", "2, recipe_advanced_1,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_6", "2, recipe_advanced_2,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_7", "2, recipe_advanced_2,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_8", "2, recipe_advanced_2,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_9", "2, recipe_advanced_2,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_10", "2, recipe_advanced_2,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_11", "2, recipe_advanced_3,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_12", "2, recipe_advanced_3,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_13", "2, recipe_advanced_3,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_14", "2, recipe_advanced_3,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_15", "2, recipe_advanced_3,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_16", "2, recipe_advanced_4,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_17", "2, recipe_advanced_4,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_18", "2, recipe_advanced_4,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_19", "2, recipe_advanced_4,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_ballistic_20", "2, recipe_advanced_4,prt_o_basic_ballistic,15,heavy_sewing_thread,1")
+
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_1", "2, recipe_advanced_1,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_2", "2, recipe_advanced_1,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_3", "2, recipe_advanced_1,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_4", "2, recipe_advanced_1,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_5", "2, recipe_advanced_1,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_6", "2, recipe_advanced_2,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_7", "2, recipe_advanced_2,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_8", "2, recipe_advanced_2,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_9", "2, recipe_advanced_2,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_10", "2, recipe_advanced_2,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_11", "2, recipe_advanced_3,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_12", "2, recipe_advanced_3,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_13", "2, recipe_advanced_3,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_14", "2, recipe_advanced_3,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_15", "2, recipe_advanced_3,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_16", "2, recipe_advanced_4,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_17", "2, recipe_advanced_4,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_18", "2, recipe_advanced_4,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_19", "2, recipe_advanced_4,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+    workshop_autoinject.add_new_recipe(7,"prt_o_retardant_20", "2, recipe_advanced_4,prt_o_basic_retardant,15,heavy_sewing_thread,1")
+	RegisterScriptCallback("ActorMenu_on_item_drag_drop",on_item_drag_dropped)
+end

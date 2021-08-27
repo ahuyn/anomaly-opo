@@ -62,6 +62,9 @@ local function dump_immunities()
     end
 end
 
+-- fetch parts for a given outfit
+-- if the outfit is the current outfit, returns those cached parts
+-- this will also validate and reset part conditions if for some reason they were nil'd out
 function get_parts(outfit)
     if not has_parts(outfit) then return nil end
     local is_current = outfit:id() == current_outfit and current_outfit_parts
@@ -89,30 +92,6 @@ end
 
 function is_part(sec)
     return string.find(sec, "prt_o") or string.find(sec, "helm_")
-end
--- apply amount damage to all parts of the outfit
--- if it is lower than certain threshold, ignore it altogether
--- todo helmet damage should be affected by helmet immunities?
-local DAMAGE_THRESHOLD = 1
-local function degrade_parts(type, amount, helmet_only)
-    print_dbg("Degrading parts, actor took %s amount of %s type damage. Player shot in head? %s", amount, type, helmet_only)
-    if is_empty(current_outfit_parts) then return end
-    for k,v in pairs(current_outfit_parts) do
-        local rank = rank_component(k)
-        print_dbg("Checking damage for component %s", k)
-        -- ignore non-part entries
-        if not is_part(k) then
-        -- bullets only damage helmet, or armor, not both
-        elseif (type == "fire_wound" and ((rank == 1 and helmet_only) or (rank ~= 1 and not helmet_only))) or type ~= "fire_wound" then
-            -- modify damage amt against part types and apply to part (out of 100)
-            local final_damage = math.floor(100 * amount * (i2m[d2i[type]][rank]))
-            if final_damage > DAMAGE_THRESHOLD then
-                current_outfit_parts[k] = clamp(v - final_damage , 0, 99) 
-                print_dbg("Component %s took %s damage, condition now %s", k, final_damage, current_outfit_parts[k])
-            end
-        end
-    end
-    item_parts.set_parts_con(current_outfit, current_outfit_parts)
 end
 
 local prev_time = nil
@@ -197,14 +176,37 @@ function actor_on_before_hit(shit,bone_id)
     end
 end
 
+-- apply amount damage to all parts of the outfit
+-- if it is lower than certain threshold, ignore it altogether
+-- todo helmet damage should be affected by helmet immunities?
+local DAMAGE_THRESHOLD = 1
+local function degrade_parts(type, amount, helmet_only)
+    print_dbg("Degrading parts, actor took %s amount of %s type damage. Player shot in head? %s", amount, type, helmet_only)
+    if is_empty(current_outfit_parts) then return end
+    for k,v in pairs(current_outfit_parts) do
+        local rank = rank_component(k)
+        print_dbg("Checking damage for component %s", k)
+        -- ignore non-part entries
+        if not is_part(k) then
+        -- bullets only damage helmet, or armor, not both
+        elseif (type == "fire_wound" and ((rank == 1 and helmet_only) or (rank ~= 1 and not helmet_only))) or type ~= "fire_wound" then
+            -- modify damage amt against part types and apply to part (out of 100)
+            local final_damage = math.floor(100 * amount * (i2m[d2i[type]][rank]))
+            if final_damage > DAMAGE_THRESHOLD then
+                current_outfit_parts[k] = clamp(v - final_damage , 0, 99) 
+                print_dbg("Component %s took %s damage, condition now %s", k, final_damage, current_outfit_parts[k])
+            end
+        end
+    end
+    item_parts.set_parts_con(current_outfit, current_outfit_parts)
+end
 
 -- glues, emergency - nothing
 -- basic sewing - fabrics only, 50%
 -- advanced/heavy - fabrics and retardants, 50-75%
 -- repairkit - 100% any, 
 local repair_item_restoration = {
-    ["sewing_kit_b"] = {20, {[
-        "prt_o_fabrics"] = true}},
+    ["sewing_kit_b"] = {20, {["prt_o_fabrics"] = true}},
     ["sewing_kit_a"] = {30, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true}},
     ["sewing_kit_h"] = {40,{["prt_o_fabrics"] = true, ["prt_o_retardant"] = true}},
     ["helmet_repair_kit"] = {50, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true}},
@@ -220,6 +222,10 @@ function part_compatible(part_name, repair_name)
     return part_matching(part_name, repair_stats[2])
 end
 
+-- get the multiplier to part restoration of the support item used
+-- part is not used in suit: 30% bonus
+-- part is used in suit: 200% (!) bonus
+-- part is fabric: bonus divided by 3
 function get_bonus(part, repair_name, outfit_parts)
     -- validate repair item
     local repair_stats = repair_item_restoration[repair_name]
@@ -278,6 +284,7 @@ local functor = function(t,a,b)
     end
 end
 
+-- restore max condition to the outfit in question
 function repair_parts(outfit, repair_item, support_part)
     local id = outfit:id()
     local sec = outfit:section()
@@ -289,6 +296,7 @@ function repair_parts(outfit, repair_item, support_part)
     check_reset_parts(id)
 end
 
+-- compute the projected value of the new outfit parts given the repair item + support part
 function apply_parts_repair(outfit_parts_original, repair_item, support_part, print)
     print_dbg("Calculating parts repair with %s and support %s", repair_item, support_part and support_part:section() or "none")
     local repair_class = repair_item_restoration[repair_item]
@@ -329,6 +337,7 @@ function apply_parts_repair(outfit_parts_original, repair_item, support_part, pr
 end
 
 -- used by item repair to get the projected max condition
+-- get the new parts after applying the repair and average them out
 function get_projected_max(outfit, repair_item, support_part)
     print_dbg("repair sec is %s", repair_item)
     
@@ -346,7 +355,7 @@ function tech_restore_parts(outfit)
     item_parts.set_parts_con(outfit:id(), outfit_parts)
 end
 
-
+-- take an average of all the parts and derive the max condition
 function average_cond(parts)
     local total = 0
     local num = 0
@@ -364,12 +373,12 @@ function average_cond(parts)
     return final_cond
 end
 
--- Compute max condition based on parts condition
+-- Compute max condition of outfit based on parts condition (from 100)
 function get_max_condition(outfit)
     if not has_parts(outfit) then return 100 end
     -- print_dbg("Checking for id %s, current is %s", outfit:id(), current_outfit)
     local outfit_parts = get_parts(outfit)
-    if outfit_parts then
+    if outfit_parts and not is_empty(outfit_parts) then
         return average_cond(outfit_parts)
     else
         return 100

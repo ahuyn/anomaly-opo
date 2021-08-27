@@ -54,15 +54,27 @@ Repair kit       | Fabrics, retardants, ballistics |         50-150%          |
 Exo repair kit   | Everything plus exo frames      |         50-150%          |
 
 
--- OPTIONAL SECTION
+-- ARMOR CRAFTER
 Armor crafter addon will let you craft ballistic and retardant components out of components you do not need.
 To use:
 Drag a disassembly tool (leatherman, grooming kit, swiss knife) over a component you want to disassemble. You will receive 1-4 of component base parts. Combine 15 and a Field Armor toolkit charge at a workbench with Advanced tools. Recipes are scattered between Mechanics manuals.
-This mini-addon works standalone and conflicts with other craft overhauls.
--- END OPTIONAL
 
 Changes to existing script files (For merge purposes)
 items_repair.ltx - New values for outfit repair items
 ui_workshop.script - Callback into main script to compute correct repair values for parts replacement.
 
 Compatibility patches for WPO and outfit speed available.
+
+1.1.1 - Mainlined armor crafter into OPO, now that the conflicts are gone.
+1.1 - Miscellaneous outfit parts are now eligible to repair any outfit (appropriate to sewing/repair kit strength). Sewing kits and outfit repair kit max part restoration greatly reduced; this bonus can be restored with using outfit parts, and matching the outfit part to the outfit vastly increases effectiveness.
+1.0.9 - Workshop no longer restores condition, only max condition. This is to balance out otherwise powerful and low-cost suit repairs. Max condition is displayed in workshop.
+1.0.8 - Projected max condition is displayed in repair screen now.
+1.0.7 - Parts damage modifier can now be changed in MCM. Fixed small issue where information on repair wasn't sent to user.
+1.0.6.2 - Fixed the annoying issue where max condition didn't reset after workshop repair.
+1.0.6.1 - Revised damage table so parts can't die faster than the suit. This should stop those annoying 'using a glue and getting your suit trashed' bugs. Nerfed sewing kits as compensation.
+1.0.6 - Restricted usage of low quality repair items on more expensive armors. Removed redundant messages on repair. Added more information in descriptions for repair items.
+1.0.5 - RUS translation from Oleg Beon
+1.0.4 - Increased wear on outfits, hopefully advanced armor should get some dings in there now. Rebalanced pricing and restoration on outfit repair items. Quick fix for OP Tur glue. Another quick fix for monkey patch allowing repair to go past max condition. THIS MAKES THE ADDON HARDER, don't use if you are happy with the degradation rate now.
+1.0.3 - Monkey patched out dependencies where possible. Removed extraneous files.
+1.0.2 - Tweaks to script for efficiency and to not clog the console. Buffed armor repair for items that were disproportionately expensive with the new changes.
+1.0.1 - Added some rounding up to the max condition. Changed sewing thread and field repair kit to replace no condition, requiring spare parts to be useful, but increased uses to 5.. This should make the grind for parts harder. Fixed patch file for speed. There is a known issue right now where after repair max condition may not update, but it is updated.
