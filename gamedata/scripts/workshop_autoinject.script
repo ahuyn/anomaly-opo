@@ -6,7 +6,7 @@ cr.overrides = {}
 cr.new_sections = {}
 
 function print_dbg(text, ...)
-	if true then
+	if false then
 		printf( "workshop auto: | %s |  "..text ,time_global(), ...)
 	end
 end
