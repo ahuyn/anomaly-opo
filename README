@@ -1,16 +1,4 @@
 Revamps outfit degradation and repair.
-1.1 - Miscellaneous outfit parts are now eligible to repair any outfit (appropriate to sewing/repair kit strength). Sewing kits and outfit repair kit max part restoration greatly reduced; this bonus can be restored with using outfit parts, and matching the outfit part to the outfit vastly increases effectiveness. 
-1.0.9 - Workshop no longer restores condition, only max condition. This is to balance out otherwise powerful and low-cost suit repairs.
-1.0.8 - Projected max condition is displayed in repair screen now.
-1.0.7 - Parts damage modifier can now be changed in MCM. Fixed small issue where information on repair wasn't sent to user.
-1.0.6.2 - Fixed the annoying issue where max condition didn't reset after workshop repair.
-1.0.6.1 - Adjusted parts damage multipliers so parts can't die faster than the suit now. To compensate, nerfed sewing kits.
-1.0.6 - Restricted usage of low quality repair items on more expensive armors. Removed redundant messages on repair. Added more information in descriptions for repair items.
-1.0.5 - RUS translation from Oleg Beon
-1.0.4 - Increased wear on outfits, hopefully advanced armor should get some dings in there now. Rebalanced pricing and restoration on outfit repair items.
-1.0.3 - Monkey patched out dependencies where possible. 
-1.0.2 - Tweaks to script for efficiency and to not clog the console. Buffed armor repair for items that were disproportionately expensive with the new changes.
-1.0.1 - Added some rounding up to the max condition. Changed sewing thread and field repair kit to replace no condition, requiring spare parts to be useful, but increased uses to 5.. This should make the grind for parts harder.
 
 Motivation:
 Why the hell can't we just glue together suits we find off people? Why are repair breakpoints so arbitrary for outfits? This addon fixes those annoyances.
