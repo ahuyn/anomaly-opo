@@ -5,8 +5,10 @@ cr.index_map = {}
 cr.overrides = {}
 cr.new_sections = {}
 
+local known_recipe = {}
+
 function print_dbg(text, ...)
-	if false then
+	if true then
 		printf( "workshop auto: | %s |  "..text ,time_global(), ...)
 	end
 end
@@ -102,6 +104,40 @@ function add_section(id, name)
     end
 end
 
+-- to bypass encyclopedia
+function ui_workshop.UIWorkshopCraft:ListRecipes()
+	
+	-- Recipes showcase
+	if is_empty(self.CC["recipe"].cell) then
+		local inv, size_t = {}, 0
+		for recipe,_ in pairs(GetItemList("recipe")) do
+			size_t = size_t + 1
+			inv[size_t] = recipe
+		end
+		self.CC["recipe"]:Reinit(inv)
+	end
+	
+	-- Show/hide unlocked/locked recipes items
+	for recipe,_ in pairs(GetItemList("recipe")) do
+		local state = false
+        print_dbg("Checking recipe %s", recipe)
+		if ui_pda_encyclopedia_tab.is_unlocked_note("encyclopedia__notes_" .. recipe) or known_recipe[recipe] then
+			state = true
+		end
+		self.recipes_items[recipe] = state
+	end
+	
+	for idx,ci in pairs(self.CC["recipe"].cell) do
+		if ci:IsShown() then
+			if self.recipes_items[ci.section] then
+				ci:Colorize("def")
+			else
+				ci:Colorize("hide")
+			end
+		end
+	end
+end
+
 function ui_workshop.UIWorkshopCraft:LoadRecipes()
 
     -- Less parts on achievement
@@ -126,7 +162,7 @@ function ui_workshop.UIWorkshopCraft:LoadRecipes()
             if cr.overrides[id] then
                 print_dbg("UIWorkshop - Hijacking recipe for %s", id)
                 local craft_string = cr.overrides[id]
-                if craft_string then
+                if craft_string then    
                     if craft_string ~= "override" then
                         print_dbg("Craft recipe for %s is %s", id, craft_string)
                         local t = str_explode(craft_string,",")
@@ -156,7 +192,6 @@ function ui_workshop.UIWorkshopCraft:LoadRecipes()
         local index = cr.index_map[section]
         for x,craft_string in pairs(recipes) do
             local t = str_explode(craft_string, ",")
-            print_dbg("Adding recipe for %s, index %s, recipe %s", section, index, craft_string)
             add_recipe(self.recipes, index, t, ach, section)
         end
     end
@@ -166,6 +201,87 @@ function ui_workshop.UIWorkshopCraft:LoadRecipes()
 		self.list_menu:AddExistingItem(_itm)
 	end
 end
+
+
+
+function item_recipe.UIRecipe:LoadRecipes()
+    
+	local ini_craft = itms_manager.ini_craft
+	
+	-- Less parts on achievement
+	local ach = 0
+	if (game_achievements.has_achievement("artificer_eagerness")) then
+		ach = 1
+	end
+
+	local ind = 1
+	while ini_craft:section_exist(tostring(ind)) do
+		local ind_str = tostring(ind)
+		local n = ini_craft:line_count(ind_str) or 0
+		for i=0, n-1 do
+			local result, id, value = ini_craft:r_line(ind_str , i , "", "")
+			id = string.sub(id,3)
+            if cr.overrides[id] then
+                print_dbg("UIWorkshop - Hijacking recipe for %s", id)
+                local craft_string = cr.overrides[id]
+                if craft_string then    
+                    if craft_string ~= "override" then
+                        print_dbg("Craft recipe for %s is %s", id, craft_string)
+                        local t = str_explode(craft_string,",")
+                        add_recipe_ui(self.recipes, self.section ,self.toolkit, t, ach, id)
+                    end
+                else
+                    local t = str_explode(value,",")
+                    add_recipe_ui(self.recipes, self.section ,self.toolkit, t, ach, id)
+                end
+			elseif ini_sys:section_exist(id) then
+				local t = str_explode(value,",")
+                add_recipe_ui(self.recipes, self.section ,self.toolkit, t, ach, id)
+			elseif (id ~= "tle") then
+				printe("! workshop_craft_ui:LoadRecipes() | section [%s] not found!",id)
+			end
+		end
+		
+		ind = ind + 1
+	end
+    
+    for section,recipes in pairs(cr.added) do
+        local index = cr.index_map[section]
+        for x,craft_string in pairs(recipes) do
+            local t = str_explode(craft_string, ",")
+            print_dbg("(Section %s) Adding for %s custom recipe %s", self.section, section, craft_string)
+            add_recipe_ui(self.recipes, self.section ,self.toolkit, t, ach, section)
+        end
+    end
+end
+function item_recipe.func_recipe(obj)
+	local sec = obj:section()
+    print_dbg("intercept recipe %s", sec)
+	if (not IsItem("recipe",sec)) then
+		return
+	end
+	
+	if (not ui_pda_encyclopedia_tab.is_unlocked_note("encyclopedia__notes_" .. sec)) then
+		SendScriptCallback("actor_on_interaction", "notes", nil, sec)
+		--alife_release(obj)
+	else
+		actor_menu.set_msg(1, game.translate_string("st_recipe_is_known"),3)
+	end
+	
+    -- add to backup cache as well
+    if not known_recipe[sec] then 
+        print_dbg("Adding %s to backup cache", sec)
+        known_recipe[sec] = true 
+    end
+	-- effect
+	local hud = get_hud()
+	if (hud) then
+		hide_hud_inventory()
+	end
+	
+	item_recipe.start(sec)
+end
+
 --recipes, workshop section, table of requirements, achievement, item section 
 function add_recipe(recipes, ind, t, ach, id)
 
@@ -209,4 +325,58 @@ function add_recipe(recipes, ind, t, ach, id)
             end
         end
     end
+end
+
+function add_recipe_ui(recipes, section, toolkit, t, ach, id)    
+    if ((#t == 6) or (#t == 8) or (#t == 10) )and (t[2] == section) then
+        local x = #recipes + 1
+        recipes[x] = {}
+        recipes[x].sec = id
+        toolkit = ui_workshop.workshop_toolkits[tonumber(t[1]) or 1]
+        if t[3] and t[4] then -- support item 1
+            if ini_sys:section_exist(tostring(t[3])) then
+                local amt = tonumber(t[4])
+                recipes[x][1] = {tostring(t[3]), (amt > 4) and (amt - ach) or amt}
+            else
+                printe("! Workshop UI craft | componenet section [%s] not found for [%s] recipe!", tostring(t[3]), id)
+            end
+        end
+        if t[5] and t[6] then -- support item 2
+            if ini_sys:section_exist(tostring(t[5])) then
+                local amt = tonumber(t[6])
+                recipes[x][2] = {tostring(t[5]), (amt > 4) and (amt - ach) or amt}
+            else
+                printe("! UIWorkshopCraft:LoadRecipes() | componenet section [%s] not found for [%s] recipe!", tostring(t[5]), id)
+            end
+        end
+        if t[7] and t[8] then -- support item 3
+            if ini_sys:section_exist(tostring(t[7])) then
+                local amt = tonumber(t[8])
+                recipes[x][3] = {tostring(t[7]), (amt > 4) and (amt - ach) or amt}
+            else
+                printe("! UIWorkshopCraft:LoadRecipes() | componenet section [%s] not found for [%s] recipe!", tostring(t[7]), id)
+            end
+        end
+        if t[9] and t[10] then -- support item 4
+            if ini_sys:section_exist(tostring(t[9])) then
+                local amt = tonumber(t[10])
+                recipes[x][4] = {tostring(t[9]), (amt > 4) and (amt - ach) or amt}
+            else
+                printe("! UIWorkshopCraft:LoadRecipes() | componenet section [%s] not found for [%s] recipe!", tostring(t[9]), id)
+            end
+        end
+    end
+end
+
+local function save_state(mdata) 
+	mdata.known_recipe = known_recipe
+end
+
+function load_state(mdata) 
+	known_recipe = mdata.known_recipe or {}
+end
+
+function on_game_start()
+	RegisterScriptCallback("save_state",save_state)
+	RegisterScriptCallback("load_state",load_state)
 end
