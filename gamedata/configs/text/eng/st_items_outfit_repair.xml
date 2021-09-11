@@ -18,6 +18,10 @@
     <string id="st_dot">
         <text>•</text>
     </string>
+    <string id="st_ui_repair_new">
+        <text>New</text>
+    </string>
+    
     
     <string id="st_total_repair">
         <text>total condition restored to suit parts:</text>
@@ -51,4 +55,13 @@
 	<string id="ui_mcm_outfit_damage_desc">
 		<text>Multiplier on how much damage your outfit parts take.</text>
 	</string>
+
+    
+    <string id="article_opo">
+        <text>Outfit Maintenance</text>
+    </string>
+    <string id="article_opo_text">
+        <text>To be written</text>
+    </string>
+
 </string_table>

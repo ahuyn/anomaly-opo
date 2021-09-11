@@ -3,9 +3,9 @@ get_config = arti_outfits_mcm.get_config
 gc = game.translate_string
 -- id of current outfit
 local current_outfit = 0
--- part names to conditions
+-- copied parts condition for current outfit
 local current_outfit_parts = {}
--- actor's current damage immunities, factoring in belt items and condition of outfit
+-- actor's current damage immunities
 local current_outfit_immunity = {}
 
 -- damage 2 immunity:
@@ -55,7 +55,7 @@ function print_dbg(text, ...)
 end
 
 local function dump_immunities()
-    if enable_debug and current_outfit ~= 0 then
+    if get_config("debug") and current_outfit ~= 0 then
         for k,v in pairs(current_outfit_immunity) do
             print_dbg("Current player immunity to %s: %s", k, v)
         end
@@ -94,47 +94,40 @@ function is_part(sec)
     return string.find(sec, "prt_o") or string.find(sec, "helm_")
 end
 
-local prev_time = nil
+function is_worn(obj)
+    local outfit_id = db.actor:item_in_slot(7) and db.actor:item_in_slot(7):id() or 0
+    return obj:id() == outfit_id 
+end
 
-local updated        = 0
-local update_step    = 2000 --[ms]
-function actor_on_update()
-    local tg = time_global()
-    if tg < updated then return end
-    updated = tg + update_step
-
-    local outfit = db.actor:item_in_slot(7)
-    local outfit_id = outfit and outfit:id() or 0
-    local do_purge = false
-    if outfit and outfit_id ~= current_outfit then
+function actor_item_to_slot(outfit)
+    print_dbg("to slot %s", outfit:section())
+    if is_worn(outfit) then
         if has_parts(outfit) then
-            current_outfit = outfit_id
+            current_outfit = outfit:id()
             print_dbg("Current outfit set to %s", outfit:section())
             current_outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
             update_immunities()
             dump_immunities()
         else
             print_dbg("outfit has no parts, purging")
-            do_purge = true
+            current_outfit = outfit:id()
+            empty_table(current_outfit_parts)
+            empty_table(current_outfit_immunity)
         end
     end
-    if outfit_id == 0 and current_outfit ~= outfit_id then
-        print_dbg("No outfit equipped, purging")
-        do_purge = true
-    end
-    if do_purge then
+end
+
+function actor_item_to_ruck(obj)
+    if not db.actor:item_in_slot(7) then
+        print_dbg("no outfit, purging")
         current_outfit = 0
         empty_table(current_outfit_parts)
         empty_table(current_outfit_immunity)
     end
-
 end
 
-function check_reset_parts(id)
-    if id == current_outfit then
-        current_outfit = 0
-        updated = updated - 1
-    end
+function check_reset_parts(outfit)
+    actor_item_to_slot(outfit)
 end
 
 -- immunities work in a reverse fashion - damage taken times immunity equals damage to armor. the lower the immunity, the less armor damage you take
@@ -195,6 +188,8 @@ function degrade_parts(type, amount, helmet_only)
             if final_damage > DAMAGE_THRESHOLD then
                 current_outfit_parts[k] = clamp(v - final_damage , 0, 99) 
                 print_dbg("Component %s took %s damage, condition now %s", k, final_damage, current_outfit_parts[k])
+            else
+                print_dbg("Component %s took no damage", k)
             end
         end
     end
@@ -293,7 +288,7 @@ function repair_parts(outfit, repair_item, support_part)
     local new_outfit_parts = apply_parts_repair(outfit_parts, repair_item, support_part, true)
     
     item_parts.set_parts_con(id, new_outfit_parts)
-    check_reset_parts(id)
+    check_reset_parts(outfit)
 end
 
 -- compute the projected value of the new outfit parts given the repair item + support part
@@ -391,7 +386,7 @@ function cap_condition(outfit)
     if outfit:condition() > outfit_max_condition then
         outfit:set_condition(outfit_max_condition)
     end
-    check_reset_parts(outfit:id())
+    check_reset_parts(outfit)
 end
 
 -- for reattaching helmet, burn one use of helmet repair kit to swap   
@@ -434,7 +429,7 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
         utils_item.discharge(helmet_kit)
         alife_release_id(helmet:id())
         item_parts.set_parts_con(outfit:id(), outfit_parts)
-        check_reset_parts(outfit:id())
+        check_reset_parts(outfit)
         news_manager.send_tip(db.actor, gc("st_helm_success"), nil, "swiss_knife", 6000)
     else
         -- not found, return error
@@ -620,17 +615,18 @@ function item_repair.UIRepair:OnItemSelect(n)
 	self.con_val[2] = ((n == 2) and con) or 0 -- support bonus
 	self.con_val[3] = math.floor((self.add_condition)*100) -- repair add
 	self.con_val[4] = clamp(self.con_val[1] + self.con_val[2] + self.con_val[3], 0, 100) -- total condition (cap this)
+    local oldMaxCond = get_max_condition(obj_1)
     local maxCond = get_projected_max(obj_1, self.section, obj_n)
     print_dbg("Projected max is %s", maxCond)
 	if IsItem("part",nil,obj_1) then
 		self.con_val[4] = utils_item.get_cond_static(self.con_val[4])
 	end
 	
-	self.con_txt[1]:SetText(utils_xml.get_color_con(self.con_val[1]) .. game.translate_string("st_ui_oldcon") .. ": +" .. self.con_val[1] .. "%")
+	self.con_txt[1]:SetText(utils_xml.get_color_con(self.con_val[1]) .. game.translate_string("st_ui_oldcon") .. ": " .. self.con_val[1] .. "/" ..oldMaxCond )
 	self.con_txt[2]:SetText(self.clr_b .. game.translate_string("st_ui_bonus") .. ": +" .. self.con_val[2] .. "%")
 	self.con_txt_base:SetText(game.translate_string("st_ui_repair") .. ": " .. self.con_val[3] .. "%")
     local color_con = self.con_val[4] > maxCond and utils_xml.get_color_con(1) or utils_xml.get_color_con(self.con_val[4])
-	self.con_txt_new:SetText(color_con .. game.translate_string("st_ui_total") .. ": " .. self.con_val[4] .. "/"..maxCond)
+	self.con_txt_new:SetText(color_con .. game.translate_string("st_ui_repair_new") .. ": " .. self.con_val[4] .. "/"..maxCond)
 	
 	-- Icon
 	self.cell_item[n]:Set(obj_n)
@@ -691,15 +687,6 @@ function ui_item.build_desc_footer(obj, sec, str)
 end
 -- end monke
 
-function actor_item_to_belt(obj)
-    update_immunities()
-end
-
-function actor_item_to_slot(obj)
-    if IsOutfit(obj) then
-        update_immunities()
-    end
-end
 
 function on_game_start()
     for i=1,20 do
@@ -712,7 +699,6 @@ function on_game_start()
     parts_map["prt_o_support"] = "prt_o_support"
 	RegisterScriptCallback("ActorMenu_on_item_drag_drop",on_item_drag_dropped)
     RegisterScriptCallback("actor_on_before_hit",actor_on_before_hit)
-    RegisterScriptCallback("actor_item_to_belt",actor_item_to_belt)
-    RegisterScriptCallback("actor_item_to_slot",actor_item_to_slot)
-    RegisterScriptCallback("actor_on_update",actor_on_update)
+	RegisterScriptCallback("actor_item_to_slot",actor_item_to_slot)
+	RegisterScriptCallback("actor_item_to_ruck",actor_item_to_ruck)
 end
