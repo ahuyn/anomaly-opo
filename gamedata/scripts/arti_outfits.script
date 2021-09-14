@@ -100,6 +100,8 @@ function is_worn(obj)
 end
 
 function actor_item_to_slot(outfit)
+    -- why the fuck is workbench like this
+    if not outfit or type(outfit) == "number" then return end
     print_dbg("to slot %s", outfit:section())
     if is_worn(outfit) then
         if has_parts(outfit) then
@@ -389,6 +391,13 @@ function cap_condition(outfit)
     check_reset_parts(outfit)
 end
 
+-- special case for ui
+function ui_max_condition(outfit)
+    local cond = get_max_condition(outfit)
+    if cond < 100 then cond = cond + 1 end
+    return cond
+end
+
 -- for reattaching helmet, burn one use of helmet repair kit to swap   
 function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     if not has_parts(outfit) then return end
@@ -666,6 +675,20 @@ local clr_w  = utils_xml.get_color("pda_white")
 
 local clr_1  = utils_xml.get_color("ui_gray_2")
 local clr_2  = utils_xml.get_color("ui_gray_1")
+
+-- BuildHeader = ui_item.build_desc_header
+-- function ui_item.build_desc_header(obj, sec, str)
+    
+--     str = BuildHeader(obj, sec, str)
+--     local max_con = get_max_condition(obj)
+--     if IsOutfit(obj) and max_con then
+--         if max_con < 100 then max_con = max_con + 1 end -- account for ceil function
+-- 		local clr = utils_xml.get_color_con(max_con)
+-- 		str = str .. clr .. " ".. gc("st_dot") .. " " .. clr_2 .. gc("ui_inv_max_condition") .. ": " .. clr .. tostring(max_con) .. "%" .. "\\n \\n" .. clr_2
+--     end
+--     return str
+-- end
+
 BuildFooter = ui_item.build_desc_footer
 function ui_item.build_desc_footer(obj, sec, str)
     str = BuildFooter(obj, sec, str)

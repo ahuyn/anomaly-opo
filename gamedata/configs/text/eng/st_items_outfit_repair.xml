@@ -55,13 +55,41 @@
 	<string id="ui_mcm_outfit_damage_desc">
 		<text>Multiplier on how much damage your outfit parts take.</text>
 	</string>
+	<string id="ui_mcm_outfit_debug">
+		<text>Debug logging</text>
+	</string>
+	<string id="ui_mcm_outfit_debug_desc">
+		<text>Debug logging</text>
+	</string>
 
     
     <string id="article_opo">
         <text>Outfit Maintenance</text>
     </string>
     <string id="article_opo_text">
-        <text>To be written</text>
+        <text>
+            Outfit Parts Overhaul changes how maintenance works, placing greater emphasis on using the right tools and parts to maintain your equipment.\n \n
+			%c[pda_green]I. Parts and Maintenance%c[ui_gray_1]\n
+            \n• Outfits have a maximum condition. This is determined by the average condition of their parts.
+            \n• Outfit repair items work from 0%, however, they can only restore up to the max condition.
+            \n• Heavier armors need stronger repair items.
+            \n• Technicians will restore all parts to 100%.
+            \n• Damage taken by the suit over time degrades max condition. Different parts degrade at different speeds.
+            \n \n
+			%c[pda_green]II. Repair and workshop changes%c[ui_gray_1]\n
+            \n• Certain repair items (sewing kits and repair kits) repair the parts in the suit. This in turn restores max condition.
+            \n• Basic sewing kits can fix fabrics. Advanced and heavy sewing kits can fix retardants and fabrics. Repair kits fix everything but helmets.
+            \n• Each kit restores a variable amount of condition, prioritizing the parts it can repair first. For example, in a suit with equally damaged ballistic, retardant, and fabric components, the ballistics take priority.
+            \n• By themselves, sewing and repair kits restore very little max condition. Outfit parts can be used as support items for repair to greatly enhance max condition restored.
+            \n• Use a 100% part that is used in the suit to maximize part condition restored (up to 3x!).
+            \n• Workshop replacement of parts does not restore max condition. To compensate, it is free and doesn't consume charges of repair kit.
+			\n \n
+            %c[pda_green]III. Armor Ripper%c[ui_gray_1]\n
+            \n• You can disassemble outfit parts to get base components!
+            \n• To disassemble, use an appropriate tool or drag-drop a tool onto a part.
+            \n• Condition affects amount of components you get.
+            \n• Outfit part components are used to assemble other outfit parts. The recipes are distributed amongst Advanced Kit books.
+        </text>
     </string>
 
 </string_table>
