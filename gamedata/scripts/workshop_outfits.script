@@ -2,17 +2,18 @@
 print_ws = ui_workshop.print_ws
 SetTip = ui_workshop.SetTip
 has_parts = arti_outfits.has_parts
-average_cond = average_cond.has_parts
+average_cond = arti_outfits.average_cond
 
 ReplacePart = ui_workshop.UIWorkshopRepair.ReplacePart
 
 function ui_workshop.UIWorkshopRepair:ReplacePart()
 	local obj_part = self.CC["parts"]:GetCell_Selected(true)
+	local obj = self.CC["inventory"]:GetCell_Selected(true)
 	if not (obj_part and self.selected_btn) then
 		return
 	end
 	if not has_parts(obj) then
-		WorkshopReplacePart(self)
+		ReplacePart(self)
 		return
 	end	
 	self.itm_selected[self.selected_btn]:InitTexture("ui_button_inv_t")
@@ -47,11 +48,11 @@ function ui_workshop.UIWorkshopRepair:ReplacePart()
 		end
 	end
 
-	local obj = self.CC["inventory"]:GetCell_Selected(true)
 	local id = obj:id()
 	local outfit = level.object_by_id(id)
 	-- Calculate total condition and update text
 	-- for outfits, display new max condition
+	printf("has parts? %s", has_parts(outfit))
 	if arti_outfits and has_parts(outfit) then
 		tot_con = clamp(math.ceil(outfit:condition() * 100), 0, 100)
 		new_max_cond = average_cond(total_cond)
@@ -154,6 +155,6 @@ function ui_workshop.UIWorkshopRepair:Repair()
 	
 	-- Effect
 	actor_effects.play_item_fx("craft_dummy")
-
+	db.actor:move_to_ruck(weapon)
 	self:Close()
 end
