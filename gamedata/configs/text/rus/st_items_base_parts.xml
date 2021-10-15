@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    <string id="st_prt_o_retardant_basic">
+        <text>Лоскут обработанной ткани</text>
+    </string>
+    <string id="st_prt_o_retardant_basic_descr">
+        <text>Небольшой лоскуток какой-то высокотехнологической ткани, используемый в защитных костюмах.</text>
+    </string>
+
+    <string id="st_prt_o_ballistic_basic">
+        <text>Части от бронежилета</text>
+    </string>
+    <string id="st_prt_o_ballistic_basic_descr">
+        <text>Небольшие баллистические пластины и ткани.</text>
+    </string>
+    <string id="st_ui_craft_components">
+        <text>Компоненты брони</text>
+    </string>
+    <string id="st_ui_scrap">
+        <text>разобрать</text>
+    </string>
+    <string id="st_ui_scrap_batch">
+        <text>разобрать (все)</text>
+    </string>
+</string_table>
