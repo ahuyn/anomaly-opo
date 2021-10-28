@@ -53,6 +53,7 @@ ui_workshop.script - Callback into main script to compute correct repair values 
 
 Compatibility patches for WPO and outfit speed available.
 
+1.2 - Repair costs for armor now scale with part damage, to prevent cheesing. Base repair costs cut in half.
 1.1.1 - Mainlined armor crafter into OPO, now that the conflicts are gone.
 1.1 - Miscellaneous outfit parts are now eligible to repair any outfit (appropriate to sewing/repair kit strength). Sewing kits and outfit repair kit max part restoration greatly reduced; this bonus can be restored with using outfit parts, and matching the outfit part to the outfit vastly increases effectiveness.
 1.0.9 - Workshop no longer restores condition, only max condition. This is to balance out otherwise powerful and low-cost suit repairs. Max condition is displayed in workshop.

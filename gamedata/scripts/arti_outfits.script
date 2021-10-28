@@ -174,7 +174,7 @@ end
 -- apply amount damage to all parts of the outfit
 -- if it is lower than certain threshold, ignore it altogether
 -- todo helmet damage should be affected by helmet immunities?
-local DAMAGE_THRESHOLD = 1
+local DAMAGE_THRESHOLD = 0.1
 function degrade_parts(type, amount, helmet_only)
     print_dbg("Degrading parts, actor took %s amount of %s type damage. Player shot in head? %s", amount, type, helmet_only)
     if is_empty(current_outfit_parts) then return end
@@ -350,6 +350,7 @@ function tech_restore_parts(outfit)
         outfit_parts[k] = 100
     end
     item_parts.set_parts_con(outfit:id(), outfit_parts)
+    check_reset_parts(outfit)
 end
 
 -- take an average of all the parts and derive the max condition
@@ -518,6 +519,109 @@ function item_parts.evaluate_parts(obj)
     end
 end
 
+local outfit_repairs = {
+    ["outfit"] = true,
+    ["outfit_novice"] = true,
+    ["outfit_light"] = true,
+    ["outfit_medium"] = true,
+    ["outfit_heavy"] = true,
+    ["outfit_exo"] = true,
+}
+
+local weight_by_parts = {1, 0.5, 0.9, 1.3, 2}
+
+function get_repair_parts_cost(outfit)
+    local parts = item_parts.get_parts_con(outfit)
+    local cond = outfit:condition()
+    local cost = ini_sys:r_u32(outfit:section(), "cost")
+    local total_missing_cond = 0
+    local total_cond = 0
+    local cond_by_parts = {}
+    for k,v in pairs(parts) do
+        if is_part(k) then
+            if v < 99 then
+                local rank = rank_component(k)
+                local diff = 99 - v
+                if not cond_by_parts[rank] then 
+                    cond_by_parts[rank] = diff
+                else
+                    cond_by_parts[rank] = cond_by_parts[rank] + diff
+                end
+                total_missing_cond = total_missing_cond + diff
+                print_dbg("%s (rank %s) is missing %s condition. total missing for this category is %s", k, rank, diff, cond_by_parts[rank])
+            end
+            total_cond = total_cond + 99
+        end
+    end
+
+    if is_empty(cond_by_parts) then return 0 end
+
+    local percent_missing = total_missing_cond / total_cond
+    print_dbg("Missing %s percentage out of %s", total_missing_cond, total_cond)
+    local sum_adjust = 0
+    for k,v in pairs(cond_by_parts) do
+        -- determine cost multiplier assuming it's out of 100
+        sum_adjust = sum_adjust + ((v/total_missing_cond) * weight_by_parts[k])
+        print_dbg("Adjusted multiplier after factoring in %s (%s cond) is %s", k, v, sum_adjust)
+    end
+    -- scale to actual missing percentage
+    sum_adjust = sum_adjust * percent_missing
+    return cost * sum_adjust
+end
+
+local repair_id
+HowMuch = inventory_upgrades_mp.how_much_repair
+
+function inventory_upgrades_mp.how_much_repair( item_name, item_condition )
+    local type = SYS_GetParam(0, item_name, "repair_type") or "none"
+    if outfit_repairs[type] and inventory_upgrades_mp.section_has_parts(item_name) then
+        print_dbg("Getting cost for %s", item_name)
+        local cost = ini_sys:r_u32(item_name, "cost")
+        local class = ini_sys:r_string_ex(item_name, "class")
+        local cof = game_difficulties.get_eco_factor("repair") or 1.67
+
+        local obj = repair_id and level.object_by_id(repair_id) or nil
+        local base_cost = cost * (1 - item_condition)
+        if obj then
+            base_cost = base_cost / 2
+            base_cost = base_cost + get_repair_parts_cost(obj)
+        end
+        --return math.floor( cost * factor * math.pow(1 - item_condition , 1.63) )
+        return math.floor( base_cost * cof ) -- CoP formula
+    else
+        return HowMuch(item_name, item_condition)
+    end
+end
+-- i need that fucking id
+function ui_inventory.UIInventory:RMode_OnRepair()
+	self:Print(nil, "RMode_OnRepair")
+	
+	if (not self.upgr.id) then
+		return
+	end
+	
+	local obj = level.object_by_id(self.upgr.id)
+	if (not obj) then
+		return
+	end
+	
+	local sec = obj:section()
+	local cond = obj:condition()
+	repair_id = self.upgr.id
+	local can_afford = inventory_upgrades.can_afford_repair_item(sec , cond)
+	local str = inventory_upgrades.question_repair_item( sec, cond, true )
+	if (str == nil) then
+		str = game.translate_string("st_upgr_cant_do")
+	end
+	
+	if can_afford then
+		self.message_box:InitMessageBox("message_box_yes_no")
+	else
+		self.message_box:InitMessageBox("message_box_ok")
+	end
+	self.message_box:SetText(str)
+	self.message_box:ShowDialog(true)
+end
 
 local clr_g  = utils_xml.get_color("d_green")
 local clr_y  = utils_xml.get_color("yellow")
@@ -533,19 +637,6 @@ local clr_w  = utils_xml.get_color("pda_white")
 
 local clr_1  = utils_xml.get_color("ui_gray_2")
 local clr_2  = utils_xml.get_color("ui_gray_1")
-
--- BuildHeader = ui_item.build_desc_header
--- function ui_item.build_desc_header(obj, sec, str)
-    
---     str = BuildHeader(obj, sec, str)
---     local max_con = get_max_condition(obj)
---     if IsOutfit(obj) and max_con then
---         if max_con < 100 then max_con = max_con + 1 end -- account for ceil function
--- 		local clr = utils_xml.get_color_con(max_con)
--- 		str = str .. clr .. " ".. gc("st_dot") .. " " .. clr_2 .. gc("ui_inv_max_condition") .. ": " .. clr .. tostring(max_con) .. "%" .. "\\n \\n" .. clr_2
---     end
---     return str
--- end
 
 BuildFooter = ui_item.build_desc_footer
 function ui_item.build_desc_footer(obj, sec, str)
