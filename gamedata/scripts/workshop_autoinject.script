@@ -4,6 +4,7 @@ cr.added = {}
 cr.index_map = {}
 cr.overrides = {}
 cr.new_sections = {}
+cr.deletions = {}
 
 local known_recipe = {}
 
@@ -56,7 +57,7 @@ function add_new_recipe(index, sec, recipe_string)
     if not ini_sys:section_exist(sec) then return false end
     if not validate_recipe(recipe_string) then return false end
     if cr.overrides[sec] then
-        print_dbg("Recipe %s already has an override recipe, returning")
+        print_dbg("Recipe %s already has an override recipe, returning", sec)
         return false
     end
     if not cr.added[sec] then
@@ -67,15 +68,24 @@ function add_new_recipe(index, sec, recipe_string)
     cr.added[sec][length + 1] = recipe_string
 end
 
+-- Delete any existing recipes not added by autoinject (e.g. that were predefined in craft.ltx)
+function clear_existing_recipes(sec)
+    if not ini_sys:section_exist(sec) then return false end
+    if not cr.deletions[sec] then cr.deletions[sec] = true end
+    return true
+end
+
 -- Specify a crafting recipe that will supersede all other crafting recipes for that item. Arguments similar to above.
 -- returns true on success, false on failure with printed reason
-function add_override_recipe(sec, recipe_string)
+function add_override_recipe(sec, recipe_string, index)
     if not ini_sys:section_exist(sec) then return false end
     if not validate_recipe(recipe_string) then return false end
     if cr.added[sec] then
-        print_dbg("Recipe %s already has additive recipes, returning")
+        print_dbg("Recipe %s already has additive recipes, returning", sec)
         return false
     end
+    if not index then index = 1 end
+    cr.index_map[sec] = index
     cr.overrides[sec] = recipe_string
     return true
 end
@@ -163,15 +173,17 @@ function ui_workshop.UIWorkshopCraft:LoadRecipes()
                 print_dbg("UIWorkshop - Hijacking recipe for %s", id)
                 local craft_string = cr.overrides[id]
                 if craft_string then    
-                    if craft_string ~= "override" then
-                        print_dbg("Craft recipe for %s is %s", id, craft_string)
-                        local t = str_explode(craft_string,",")
-                        add_recipe(self.recipes, ind, t, ach, id)
-                    end
+                    -- if craft_string ~= "override" then
+                    --     print_dbg("Craft recipe for %s is %s", id, craft_string)
+                    --     local t = str_explode(craft_string,",")
+                    --     add_recipe(self.recipes, ind, t, ach, id)
+                    -- end
                 else
                     local t = str_explode(value,",")
                     add_recipe(self.recipes, ind, t, ach, id)
                 end
+            elseif cr.deletions[id] then
+                -- do nothing lel
 			elseif ini_sys:section_exist(id) then
 				local t = str_explode(value,",")
                 add_recipe(self.recipes, ind, t, ach, id)
@@ -186,6 +198,13 @@ function ui_workshop.UIWorkshopCraft:LoadRecipes()
     for k,v in pairs(cr.new_sections) do
         self.recipes_type[k] = v
         self.recipes[k] = {}
+    end
+    for section,craft_string in pairs(cr.overrides) do
+        if craft_string ~= "override" then
+            local index = cr.index_map[section]
+            local t = str_explode(craft_string,",")
+            add_recipe(self.recipes, index, t, ach, section)
+        end
     end
 
     for section,recipes in pairs(cr.added) do
