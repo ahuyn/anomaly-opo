@@ -668,7 +668,7 @@ function on_game_start()
     for i=1,4 do
         parts_map["prt_o_fabrics_"..i] = "prt_o_fabrics"
     end
-    parts_map["prt_o_support"] = "prt_o_support"
+    parts_map["prt_o_support_1"] = "prt_o_support"
 	RegisterScriptCallback("ActorMenu_on_item_drag_drop",on_item_drag_dropped)
     RegisterScriptCallback("actor_on_before_hit",actor_on_before_hit)
 	RegisterScriptCallback("actor_item_to_slot",actor_item_to_slot)
