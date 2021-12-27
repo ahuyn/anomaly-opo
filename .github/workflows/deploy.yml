@@ -24,6 +24,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          
+      - name: Install dependencies
+        id: ta_dep
+        run: |
+          cp -r anomaly-dependencies/trader_autoinject/gamedata .
+          cp -r anomaly-dependencies/encyclopedia/gamedata .
 
       - name: Get current date
         id: date
