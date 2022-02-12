@@ -23,6 +23,8 @@ function ui_workshop.UIWorkshopRepair:ReplacePart()
 	-- Save the condition of selected part
 	local new_part_con = math.ceil(obj_part:condition()*100)
 	
+	if self.parts[self.selected_btn].con > new_part_con then return end
+
 	self.new_con[self.selected_btn] = {}
 	self.new_con[self.selected_btn].id = obj_part:id()
 	self.new_con[self.selected_btn].con = new_part_con
@@ -52,7 +54,6 @@ function ui_workshop.UIWorkshopRepair:ReplacePart()
 	local outfit = level.object_by_id(id)
 	-- Calculate total condition and update text
 	-- for outfits, display new max condition
-	printf("has parts? %s", has_parts(outfit))
 	if arti_outfits and has_parts(outfit) then
 		tot_con = clamp(math.ceil(outfit:condition() * 100), 0, 100)
 		new_max_cond = average_cond(total_cond)

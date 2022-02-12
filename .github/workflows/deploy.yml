@@ -31,6 +31,7 @@ jobs:
         id: ta_dep
         run: |
           cp -r anomaly-dependencies/trader_autoinject/gamedata .
+          cp -r anomaly-dependencies/workshop_autoinject/gamedata .
           cp -r anomaly-dependencies/encyclopedia/gamedata .
 
       - name: Get current date

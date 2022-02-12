@@ -104,18 +104,32 @@ function actor_item_to_slot(outfit)
     if not outfit or type(outfit) == "number" then return end
     print_dbg("to slot %s", outfit:section())
     if is_worn(outfit) then
-        if has_parts(outfit) then
-            current_outfit = outfit:id()
-            print_dbg("Current outfit set to %s", outfit:section())
-            current_outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
-            update_immunities()
-            dump_immunities()
-        else
-            print_dbg("outfit has no parts, purging")
-            current_outfit = outfit:id()
-            empty_table(current_outfit_parts)
-            empty_table(current_outfit_immunity)
-        end
+        if outfit:id() ~= current_outfit then flush_parts() end
+        update_current_parts(outfit)
+    end
+end
+
+-- update the current parts to this outfit
+function update_current_parts(outfit)
+
+    current_outfit = outfit:id()
+    print_dbg("Current outfit set to %s", outfit:section())
+    
+    if has_parts(outfit) then
+        current_outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
+        update_immunities()
+        dump_immunities()
+    else
+        print_dbg("outfit has no parts, purging")
+        empty_table(current_outfit_parts)
+        empty_table(current_outfit_immunity)
+    end
+end
+
+-- persist the cached parts
+function flush_parts()
+    if current_outfit ~= 0 and next(current_outfit_parts) ~= nil then
+        item_parts.set_parts_con(current_outfit, dup_table(current_outfit_parts))
     end
 end
 
@@ -195,7 +209,8 @@ function degrade_parts(type, amount, helmet_only)
             end
         end
     end
-    item_parts.set_parts_con(current_outfit, current_outfit_parts)
+    -- item_parts.set_parts_con(current_outfit, current_outfit_parts)
+    flush_parts()
 end
 
 -- glues, emergency - nothing
