@@ -33,6 +33,7 @@ jobs:
           cp -r anomaly-dependencies/trader_autoinject/gamedata .
           cp -r anomaly-dependencies/workshop_autoinject/gamedata .
           cp -r anomaly-dependencies/encyclopedia/gamedata .
+          cp -r anomaly-dependencies/workshop_autoinject/gamedata .
 
       - name: Get current date
         id: date
