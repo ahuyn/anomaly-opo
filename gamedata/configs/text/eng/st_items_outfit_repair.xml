@@ -30,18 +30,26 @@
     <string id="st_can_repair">
         <text>can repair following components of suit:</text>
     </string>
-    <string id="st_type_prt_o_fabrics">
+    <string id="st_type_2">
         <text>fabrics</text>
     </string>
-    <string id="st_type_prt_o_ballistic">
+    <string id="st_type_4">
         <text>ballistics</text>
     </string>
-    <string id="st_type_prt_o_retardant">
+    <string id="st_type_3">
         <text>retardants</text>
     </string>
-    <string id="st_type_prt_o_support">
+    <string id="st_type_5">
         <text>exoskeleton frames</text>
     </string>
+    <string id="st_type_1">
+        <text>helmet</text>
+    </string>
+
+    <string id="st_type_integrity">
+        <text>integrity:</text>
+    </string>
+     
     
 	<string id="ui_mcm_outfit_title">
 		<text>Outfit Parts Overhaul</text>
@@ -79,9 +87,8 @@
 			%c[pda_green]II. Repair and workshop changes%c[ui_gray_1]\n
             \n• Certain repair items (sewing kits and repair kits) repair the parts in the suit. This in turn restores max condition.
             \n• Basic sewing kits can fix fabrics. Advanced and heavy sewing kits can fix retardants and fabrics. Repair kits fix everything but helmets.
-            \n• Each kit restores a variable amount of condition, prioritizing the parts it can repair first. For example, in a suit with equally damaged ballistic, retardant, and fabric components, the ballistics take priority.
-            \n• By themselves, sewing and repair kits restore very little max condition. Outfit parts can be used as support items for repair to greatly enhance max condition restored.
-            \n• Use a 100% part that is used in the suit to maximize part condition restored (up to 3x!).
+            \n• Each kit restores a set amount of condition distributed equally to all parts of the outfit.
+            \n• Outfit components may be used in the repair. If used, they will directly increase the part that they match with. If not, they apply condition to parts in their category at 25% of their effectiveness.
             \n• Workshop replacement of parts does not restore max condition. To compensate, it is free and doesn't consume charges of repair kit.
 			\n \n
             %c[pda_green]III. Armor Ripper%c[ui_gray_1]\n

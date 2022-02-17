@@ -7,6 +7,21 @@ get_max_condition = arti_outfits.get_max_condition
 get_projected_max = arti_outfits.get_projected_max
 repair_parts = arti_outfits.repair_parts
 cap_condition = arti_outfits.cap_condition
+average_cond = arti_outfits.average_cond
+is_part = arti_outfits.is_part
+
+
+function generate_readout(old, new)
+	str = ""
+	for k,v in pairs(old) do
+		diff = new[k] - v
+		if is_part(k) then
+			str = str .. ui_item.get_sec_name(k) .. ": \\n"
+			str = str .. v .. " + " .. diff .. " = " .. new[k] .. " \\n" 
+		end
+	end
+	return str
+end
 
 
 -- reject conflicts, return to monke
@@ -95,6 +110,8 @@ function item_repair.UIRepair:InitInventory(n)
 			end
 		end
 	end
+	repair_ui.start()
+	repair_ui.set_text("")
 end
 
 RepairOnItemSelect = item_repair.UIRepair.OnItemSelect
@@ -135,7 +152,9 @@ function item_repair.UIRepair:OnItemSelect(n)
 	self.con_val[3] = math.floor((self.add_condition)*100) -- repair add
 	self.con_val[4] = clamp(self.con_val[1] + self.con_val[2] + self.con_val[3], 0, 100) -- total condition (cap this)
     local oldMaxCond = get_max_condition(obj_1)
-    local maxCond = get_projected_max(obj_1, self.section, obj_n)
+	local diff = get_projected_max(obj_1, self.section, obj_n)
+	local maxCond = average_cond(diff.new)
+    -- local maxCond = get_projected_max(obj_1, self.section, obj_n)
     print_dbg("Projected max is %s", maxCond)
 	if IsItem("part",nil,obj_1) then
 		self.con_val[4] = utils_item.get_cond_static(self.con_val[4])
@@ -155,7 +174,7 @@ function item_repair.UIRepair:OnItemSelect(n)
 		self.cell_item[2]:Reset()
 		self.text_item[2]:SetText("")
 	end
-	
+	repair_ui.set_text(generate_readout(diff.old, diff.new))
 	self.btn_repair:Enable(true)
 end
 
@@ -169,4 +188,11 @@ function item_repair.UIRepair:OnRepair()
         repair_parts(obj_1, self.obj:section(), obj_2)
         cap_condition(obj_1)
     end
+	repair_ui.close()
+end
+
+RepairCancel = item_repair.UIRepair.OnCancel
+function item_repair.UIRepair:OnCancel()
+	RepairCancel(self)
+	repair_ui.close()
 end

@@ -8,6 +8,8 @@ local current_outfit_parts = {}
 -- actor's current damage immunities
 local current_outfit_immunity = {}
 
+local ini_restore = ini_file("items\\settings\\outfit_repair.ltx")
+local repair_item_restoration = {}
 -- damage 2 immunity:
 local d2i = {
     ["chemical_burn"] = "chemical_burn_immunity",
@@ -62,6 +64,12 @@ local function dump_immunities()
     end
 end
 
+function dump_parts(parts_table)
+    for k,v in pairs(parts_table) do
+        print_dbg("%s: %s", k, v)
+    end
+end
+
 -- fetch parts for a given outfit
 -- if the outfit is the current outfit, returns those cached parts
 -- this will also validate and reset part conditions if for some reason they were nil'd out
@@ -91,7 +99,8 @@ function has_parts(outfit)
 end
 
 function is_part(sec)
-    return string.find(sec, "prt_o") or string.find(sec, "helm_")
+    return SYS_GetParam(1, sec, "cond_part") or SYS_GetParam(0, sec, "kind") == "o_helmet"
+    -- return string.find(sec, "prt_o") or string.find(sec, "helm_")
 end
 
 function is_worn(obj)
@@ -217,21 +226,11 @@ end
 -- basic sewing - fabrics only, 50%
 -- advanced/heavy - fabrics and retardants, 50-75%
 -- repairkit - 100% any, 
-local repair_item_restoration = {
-    ["sewing_kit_b"] = {20, {["prt_o_fabrics"] = true}},
-    ["sewing_kit_a"] = {30, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true}},
-    ["sewing_kit_h"] = {40,{["prt_o_fabrics"] = true, ["prt_o_retardant"] = true}},
-    ["helmet_repair_kit"] = {50, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true}},
-    ["light_repair_kit"] = {50, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true}},
-    ["medium_repair_kit"] = {50,{["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true}},
-    ["heavy_repair_kit"] = {50, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true}},
-    ["exo_repair_kit"] = {50, {["prt_o_fabrics"] = true, ["prt_o_retardant"] = true, ["prt_o_ballistic"] = true, ["prt_o_support"] = true}},
-}
 
 function part_compatible(part_name, repair_name)
     local repair_stats = repair_item_restoration[repair_name]
     if not repair_stats then return false end
-    return part_matching(part_name, repair_stats[2])
+    return part_matching(part_name, repair_stats.can_repair)
 end
 
 -- get the multiplier to part restoration of the support item used
@@ -239,62 +238,25 @@ end
 -- part is used in suit: 200% (!) bonus
 -- part is fabric: bonus divided by 3
 function get_bonus(part, repair_name, outfit_parts)
-    -- validate repair item
-    local repair_stats = repair_item_restoration[repair_name]
-    if not repair_stats then 
-        print_dbg("Passed repair item has no max condition restoration")
-        return 1 
-    end
-    restore_base = repair_stats[1]
-    restore_parts = repair_stats[2]
-    -- validate part (can be nil)
-    if not part then 
-        print_dbg("Passed support item is nil")
-        return 1 
-    end
-    local part_name = part:section()
-    if not is_part(part_name) then return 1 end
-    local part_cond = part:condition()
-    local part_entry = parts_map[part_name]
-    local bonus = 0
-    print_dbg("Part: name is %s, condition %s, entry is %s, value in outfit parts: %s", part_name, part_cond, part_entry, outfit_parts[part_name])
-    if part_entry and restore_parts[part_entry] then
-        -- support item is outfit part - provide up to 30% if non-matching, or 200% if matching
-        bonus = outfit_parts[part_name] ~= nil and 2 or 0.3
-        bonus = bonus * part_cond
-        if rank_component(part_name) == 2 then
-            bonus = bonus / 3
-        end
-    end
-    print_dbg("Bonus multiplier for part %s is %s", part_name, bonus)
-    return 1 + bonus
+    return 1
 end
 
 function part_matching(part_name, part_list)
     local part_type = parts_map[part_name]
-    return part_list[part_type]
+    return part_list[rank_component(part_name)]
 end
 function rank_component(name)
-    if string.find(name, "prt_o_support") then
-        return 5
-    elseif string.find(name, "prt_o_ballistic") then
-        return 4
-    elseif string.find(name, "prt_o_retardant") then
-        return 3
-    elseif string.find(name, "prt_o_fabrics") then
-        return 2
-    else
-        return 1
-    end
+    return parts_map[name] or 1
 end
-local functor = function(t,a,b) 
-    local rank_a = a and rank_component(a) or 0
-    local rank_b = b and rank_component(b) or 0
-    if rank_a ~= rank_b then return rank_a > rank_b
-    else
-        return a > b 
-    end
-end
+
+-- local functor = function(t,a,b) 
+--     local rank_a = a and rank_component(a) or 0
+--     local rank_b = b and rank_component(b) or 0
+--     if rank_a ~= rank_b then return rank_a > rank_b
+--     else
+--         return a > b 
+--     end
+-- end
 
 -- restore max condition to the outfit in question
 function repair_parts(outfit, repair_item, support_part)
@@ -302,14 +264,77 @@ function repair_parts(outfit, repair_item, support_part)
     local sec = outfit:section()
     print_dbg("Repairing %s with %s and %s", sec, repair_item, support_part and support_part:section() or "none")
     local outfit_parts = get_parts(outfit)
-    local new_outfit_parts = apply_parts_repair(outfit_parts, repair_item, support_part, true)
+    local new_outfit_parts = calc_parts_repair(outfit_parts, repair_item, support_part, true)
     
     item_parts.set_parts_con(id, new_outfit_parts)
     check_reset_parts(outfit)
 end
 
+-- evenly apply the amount of repair to the outfit parts
+function distribute_repair(amt, repairable, outfit_parts_og)
+    local outfit_parts = {}
+    copy_table(outfit_parts, outfit_parts_og)
+    local amount = amt
+    local filtered_parts = {}
+    print_dbg("Before repair:")
+    dump_parts(outfit_parts)
+    -- copy only the repairable parts into here
+    local count = 0
+    for k,v in pairs(outfit_parts) do
+        if repairable[parts_map[k]] and v < 99 then
+            filtered_parts[k] = v
+            count = count + 1
+        end
+    end
+    -- check if we have anything to repair
+    if count == 0 then
+        return outfit_parts
+    end
+    -- distribute amount equally
+    local rep_per_part = math.ceil(amount/count)
+    print_dbg("Amount restored per part: %s. Parts to fix: %s", rep_per_part, count)
+    while amount > 0 and count > 0 do
+        -- loop and apply condition
+        local to_remove = {}
+        for k,v in pairs(filtered_parts) do
+            if v >= 99 then 
+                -- if component repaired, drop entry
+                print_dbg("%s fully repaired, %s parts remaining", k, count)
+                to_remove[k] = true
+            else
+                local to_repair = math.min(99 - v, math.min(rep_per_part, amount))
+                filtered_parts[k] = filtered_parts[k] + to_repair
+                amount = amount - to_repair
+                print_dbg("Restored %s to %s, condition now %s", to_repair, k, filtered_parts[k])
+                if filtered_parts[k] >= 99 then
+                    to_remove[k] = true
+                end
+            end
+        end
+        
+        for k,v in pairs(to_remove) do
+            outfit_parts[k] = filtered_parts[k]
+            filtered_parts[k] = nil
+            count = count - 1
+        end
+        if amount > 0 and count > 0 then
+            rep_per_part = math.ceil(amount/count)
+            print_dbg("New amount restored per part: %s", rep_per_part)
+        end
+    end
+    -- re-persist any outstanding entries
+    if count > 0 then
+        for k,v in pairs(filtered_parts) do
+            outfit_parts[k] = v
+        end
+    end
+    print_dbg("After repair:")
+    dump_parts(outfit_parts)
+    return outfit_parts
+end
+
 -- compute the projected value of the new outfit parts given the repair item + support part
-function apply_parts_repair(outfit_parts_original, repair_item, support_part, print)
+function calc_parts_repair(outfit_parts_original, repair_item, support_part, print)
     print_dbg("Calculating parts repair with %s and support %s", repair_item, support_part and support_part:section() or "none")
     local repair_class = repair_item_restoration[repair_item]
     if not repair_class then 
@@ -318,33 +343,35 @@ function apply_parts_repair(outfit_parts_original, repair_item, support_part, pr
     end
     local outfit_parts = {}
     copy_table(outfit_parts, outfit_parts_original)
-    local remaining_cond = repair_class[1] * get_bonus(support_part, repair_item, outfit_parts)
-    remaining_cond = math.ceil(remaining_cond)
-    local repairable = repair_class[2]
-    local str = ""
-    print_dbg("Total condition to be restored: %s", remaining_cond)
-    for k,v in spairs(outfit_parts, functor) do
-        if remaining_cond == 0 then
-            break
-        elseif string.find(k, "prt_o") then
-            if part_matching(k, repairable) then 
-                local max_restorable = 99 - v
-                local restored = remaining_cond > max_restorable and max_restorable or remaining_cond
-                outfit_parts[k] = v + restored
-                remaining_cond = remaining_cond - restored
-                print_dbg("Restored %s condition to %s, condition now %s, remaining condition is %s.", restored, k, outfit_parts[k], remaining_cond)
-                if restored > 0 then
-                    local part_name = gc(ini_sys:r_string_ex(k, "inv_name"))
-                    local string = strformat(gc("st_part_repaired"), part_name, outfit_parts[k])
-                    str = str .. string .. "\\n"
-                end
-
-            end
+    local restore_cond = repair_class.restore_cond --* get_bonus(support_part, repair_item, outfit_parts)
+    local cond_bonus = get_bonus()
+    -- if support part is a part, apply the part cond directly to new part
+    support_sec = support_part and support_part:section() or "none"
+    if parts_map[support_sec] then
+        if outfit_parts[support_sec] then
+           outfit_parts[support_sec] = clamp(outfit_parts[support_sec] + math.ceil(support_part:condition() * 100), 1, 99)
+        else
+            local to_restore = math.ceil(support_part:condition() * 25)
+            print_dbg("Non matching part found, applying %s to category %s", to_restore, parts_map[support_sec])
+            outfit_parts = distribute_repair(to_restore, {[parts_map[support_sec]] = true}, outfit_parts)
         end
     end
+    outfit_parts = distribute_repair(restore_cond, repair_class.can_repair, outfit_parts)
+
+    local str = ""
+    -- loop through parts, compare with original and provide readout
+    for k,v in pairs(outfit_parts) do
+        if v > outfit_parts_original[k] then
+            local part_name = gc(ini_sys:r_string_ex(k, "inv_name"))
+            local string = strformat(gc("st_part_repaired"), part_name, outfit_parts[k])
+            str = str .. string .. "\\n"
+        end
+    end
+
     if str ~= "" and print then
         news_manager.send_tip(db.actor, str, nil, "swiss_knife", 6000)
     end
+
     return outfit_parts
 end
 
@@ -355,8 +382,12 @@ function get_projected_max(outfit, repair_item, support_part)
     
     if not has_parts(outfit) then return 100 end
     local outfit_parts = get_parts(outfit)
-    local new_outfit_parts = apply_parts_repair(outfit_parts, repair_item, support_part,false)
-    return average_cond(new_outfit_parts)
+    local new_outfit_parts = calc_parts_repair(outfit_parts, repair_item, support_part,false)
+    return {
+        ["old"] = outfit_parts,
+        ["new"] = new_outfit_parts,
+    }
+    -- return average_cond(new_outfit_parts)
 end
 
 function tech_restore_parts(outfit)
@@ -384,6 +415,23 @@ function average_cond(parts)
     local final_cond = 20 + math.floor(0.8*(total/num))
     if final_cond > 97 then final_cond = 100 end
     return final_cond
+end
+
+-- Convert parts data into total readout for display
+function to_infobox(parts)
+    local result = {}
+    for k,v in pairs(parts) do
+        if is_part(k) then
+            local rank = rank_component(k)
+            if not result[rank] then result[rank] = {
+                ["total"] = 0,
+                ["max"] = 0,
+            } end
+            result[rank].total = result[rank].total + v + 1
+            result[rank].max = result[rank].max + 100
+        end
+    end
+    return result
 end
 
 -- Compute max condition of outfit based on parts condition (from 100)
@@ -414,12 +462,17 @@ function ui_max_condition(outfit)
     return cond
 end
 
+function replace_helmet(helmet, outfit, kit)
+
+end
+
 -- for reattaching helmet, burn one use of helmet repair kit to swap   
 function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     if not has_parts(outfit) then return end
     if not IsHeadgear(helmet) then return end
 
 	local helmet_sec = helmet and helmet:section() or nil
+    local helmet_con = math.floor(helmet:condition() * 100)
     local outfit_sec = outfit and outfit:section() or nil
     local outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
     local helmet_kit = db.actor:object("helmet_repair_kit")
@@ -431,13 +484,19 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     local found_helmet = nil
     local num_parts = 0
     for k,v in pairs(outfit_parts) do
+        print_dbg("Checking %s", k)
         num_parts = num_parts + 1
-        if k == helmet_sec and v < 99 then
+        if k == helmet_sec then
             found_helmet = k
         end
     end
 
     if found_helmet then
+        if outfit_parts[found_helmet] >= helmet_con then
+            return
+        end
+        -- check existing helmet condition
+
         local helm_to_spawn = alife_create(found_helmet, db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id(), false)
         local data = utils_stpk.get_item_data(helm_to_spawn)
         data.condition = outfit_parts[found_helmet]/100
@@ -461,36 +520,6 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
         news_manager.send_tip(db.actor, gc("st_no_helm"), nil, "swiss_knife", 6000)
     end
 end
-
--- UNUSED
--- return a new condition based on the new parts conditions + old outfit condition
-function calc_new_cond(outfit, new_parts, all_parts, max_cond)
-    local parts = str_explode(ini_parts:r_string_ex("con_parts_list", outfit:section()), ",")
-    local max_cond = all_parts and average_cond(all_parts) or get_max_condition(outfit)
-    local current_cond = math.floor(outfit:condition() * 100)
-    local condition_per_part = math.floor(80/#parts)
-    print_dbg("Outfit: %s. Current condition: %s. Max condition: %s. Condition per part: %s", outfit:section(), current_cond, max_cond, condition_per_part)
-    local tot_restored = 0
-    for k,v in pairs(new_parts) do
-        -- update new current condition and max condition
-        local old_cond = all_parts[k]
-        tot_restored = tot_restored + math.floor((condition_per_part*v)/100)
-        print_dbg("calc_new_cond: part contribution: %s. total condition restored: %s", v, tot_restored)
-    end
-    current_cond = current_cond + tot_restored
-    if current_cond > max_cond then current_cond = max_cond end
-    print_dbg("Final outfit condition is %s", current_cond)
-    return current_cond
-end
-
--- UNUSED
-function set_new_cond(outfit, new_parts, all_parts)
-    local cond = calc_new_cond(outfit, new_parts, all_parts)/100
-    outfit:set_condition(cond)
-    current_outfit = 0
-    updated = time_global() - 1
-end
-
 
 OnUIRepair = ui_inventory.UIInventory.RMode_RepairYes
 
@@ -607,6 +636,7 @@ function inventory_upgrades_mp.how_much_repair( item_name, item_condition )
         return HowMuch(item_name, item_condition)
     end
 end
+
 -- i need that fucking id
 function ui_inventory.UIInventory:RMode_OnRepair()
 	self:Print(nil, "RMode_OnRepair")
@@ -653,6 +683,27 @@ local clr_w  = utils_xml.get_color("pda_white")
 local clr_1  = utils_xml.get_color("ui_gray_2")
 local clr_2  = utils_xml.get_color("ui_gray_1")
 
+original_build_desc_header = ui_item.build_desc_header
+function ui_item.build_desc_header(obj, sec, str)
+	local _str = ""
+	local _str2 = original_build_desc_header(obj, sec, str)
+	
+	if obj and has_parts(obj) then
+		local parts = item_parts.get_parts_con(obj, nil, true)
+        local infobox = to_infobox(parts)
+		for k,v in pairs(infobox) do
+            clr_con = utils_xml.get_color_con(v.total*100/v.max)
+            pad = k == 2 and " " or ""
+            cond_str = string.format("%-20s"..pad, gc("st_type_"..k) .. " " .. gc("st_type_integrity"))
+            str = "  " .. gc("st_dot").. "  " .. cond_str ..clr_con ..  "  " .. v.total .. "/" .. v.max .. clr_2 .. " \\n"
+			_str = _str .. str
+		end
+	end
+	_str = _str2 .. _str
+
+	return _str
+end
+
 BuildFooter = ui_item.build_desc_footer
 function ui_item.build_desc_footer(obj, sec, str)
     str = BuildFooter(obj, sec, str)
@@ -660,10 +711,10 @@ function ui_item.build_desc_footer(obj, sec, str)
         str = str:sub(1, -3)
         local rest = repair_item_restoration[sec]
         local repair = {}
-        for k,v in pairs(rest[2]) do
+        for k,v in pairs(rest.can_repair) do
             repair[#repair+1] = k
         end
-        str = str .. clr_o .. " " .. gc("st_dot") .. " " .. clr_1 .. " " .. gc("st_total_repair") .. " " .. rest[1].. "-" .. 3*rest[1] .. "%\\n"
+        str = str .. clr_o .. " " .. gc("st_dot") .. " " .. clr_1 .. " " .. gc("st_total_repair") .. " " .. rest.restore_cond.."%\\n"
         str = str .. clr_o .. "  " .. gc("st_dot") .. " " .. clr_1 .. " " .. gc("st_can_repair") .. " " .. gc("st_type_"..repair[1])
         for i=2,#repair  do
             str = str .. ", " .. gc("st_type_"..repair[i])
@@ -674,15 +725,41 @@ function ui_item.build_desc_footer(obj, sec, str)
 end
 -- end monke
 
+-- too handy
+function str_explode_num(str, sep, plain)
+	if not (str and sep) then
+		printe("!ERROR str_explode | missing parameter str = %s, sep = %s",str,sep)
+		callstack()
+	end
+	if not (sep ~= "" and str:find(sep,1,plain)) then
+		return { tonumber(str) }
+	end
+	local t = {}
+	local size = 0
+	for s in str:gsplit(sep,plain) do 
+		size = size + 1
+		t[size] = tonumber(trim(s))
+	end
+	return t
+end
 
 function on_game_start()
+    parts_map["prt_o_support_1"] = 5
     for i=1,20 do
-        parts_map["prt_o_ballistic_"..i] = "prt_o_ballistic"
-        parts_map["prt_o_retardant_"..i] = "prt_o_retardant"
+        parts_map["prt_o_ballistic_"..i] = 4
+        parts_map["prt_o_retardant_"..i] = 3
     end
     for i=1,4 do
-        parts_map["prt_o_fabrics_"..i] = "prt_o_fabrics"
+        parts_map["prt_o_fabrics_"..i] = 2
     end
+    ini_restore:section_for_each(function(section)
+        print_dbg("Processing %s", section)
+        restore_sec = {}
+        restore_sec.can_repair = str_explode_num(ini_restore:r_string_ex(section, "can_repair"), ",")
+        t2k_table(restore_sec.can_repair)
+        restore_sec.restore_cond = ini_restore:r_float_ex(section, "restore_cond")
+        repair_item_restoration[section] = restore_sec
+    end)
     parts_map["prt_o_support_1"] = "prt_o_support"
 	RegisterScriptCallback("ActorMenu_on_item_drag_drop",on_item_drag_dropped)
     RegisterScriptCallback("actor_on_before_hit",actor_on_before_hit)
