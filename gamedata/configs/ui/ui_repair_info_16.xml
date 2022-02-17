@@ -1,10 +1,10 @@
 <w>
-	<background x="5" y="110" width="250" height="300" stretch="1">
+	<background x="5" y="110" width="220" height="300" stretch="1">
 		<texture>ui_inGame2_workshop_item_window_con</texture>
 	</background>
 	<repair>
 
-		<text_info x="20" y="90" width="230" height="300">
+		<text_info x="20" y="90" width="210" height="300">
 			<text complex_mode="1" r="150" g="150" b="150" align="l" vert_align="c" font="letterica16"/>
 		</text_info>
     </repair>
