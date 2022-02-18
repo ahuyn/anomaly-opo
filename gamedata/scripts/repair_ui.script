@@ -16,8 +16,10 @@ function set_text(text)
 end
 
 function close()
-    GUI:SetText("")
-    GUI:Close()
+	if GUI then
+		GUI:SetText("")
+		GUI:Close()
+	end
 end
 
 class "UIRepairWindow"(CUIScriptWnd)
