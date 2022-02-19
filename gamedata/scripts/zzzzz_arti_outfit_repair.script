@@ -1,5 +1,6 @@
 part_compatible = arti_outfits.part_compatible
 print_dbg = arti_outfits.print_dbg
+get_config = arti_outfits_mcm.get_config
 
 has_parts = arti_outfits.has_parts
 rank_component = arti_outfits.rank_component
@@ -110,8 +111,10 @@ function item_repair.UIRepair:InitInventory(n)
 			end
 		end
 	end
-	repair_ui.start()
-	repair_ui.set_text("")
+	if get_config("ui") then
+		repair_ui.start()
+		repair_ui.set_text("")
+	end
 end
 
 RepairOnItemSelect = item_repair.UIRepair.OnItemSelect
@@ -128,6 +131,7 @@ function item_repair.UIRepair:OnItemSelect(n)
 
     if not has_parts(obj_1) then 
         RepairOnItemSelect(self, n)
+		return
     end
 
 	local con = 0
@@ -174,13 +178,18 @@ function item_repair.UIRepair:OnItemSelect(n)
 		self.cell_item[2]:Reset()
 		self.text_item[2]:SetText("")
 	end
-	repair_ui.set_text(generate_readout(diff.old, diff.new))
+	if get_config("ui") then
+		repair_ui.set_text(generate_readout(diff.old,	 diff.new))
+	end
 	self.btn_repair:Enable(true)
 end
 
 OnRepair = item_repair.UIRepair.OnRepair
 
 function item_repair.UIRepair:OnRepair()	
+	if get_config("ui") then
+		repair_ui.close()
+	end
 	local obj_1 = self.CC[1]:GetCell_Selected(true)
 	local obj_2 = self.CC[2]:GetCell_Selected(true)
 	OnRepair(self)
@@ -188,11 +197,12 @@ function item_repair.UIRepair:OnRepair()
         repair_parts(obj_1, self.obj:section(), obj_2)
         cap_condition(obj_1)
     end
-	repair_ui.close()
 end
 
 RepairCancel = item_repair.UIRepair.OnCancel
 function item_repair.UIRepair:OnCancel()
+	if get_config("ui") then
+		repair_ui.close()
+	end
 	RepairCancel(self)
-	repair_ui.close()
 end

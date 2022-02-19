@@ -69,6 +69,14 @@
 	<string id="ui_mcm_outfit_debug_desc">
 		<text>Debug logging</text>
 	</string>
+    
+	<string id="ui_mcm_outfit_ui">
+		<text>Show Part Repair Window</text>
+	</string>
+	<string id="ui_mcm_outfit_ui_desc">
+		<text>Opens a window in repair interface that shows part restoration for outfits.</text>
+	</string>
+
 
     
     <string id="article_opo">
