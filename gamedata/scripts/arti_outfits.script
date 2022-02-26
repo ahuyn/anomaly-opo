@@ -203,7 +203,7 @@ function degrade_parts(type, amount, helmet_only)
     if is_empty(current_outfit_parts) then return end
     for k,v in pairs(current_outfit_parts) do
         local rank = rank_component(k)
-        print_dbg("Checking damage for component %s", k)
+        print_dbg("Checking damage for component %s, rank %s", k, rank)
         -- ignore non-part entries
         if not is_part(k) then
         -- bullets only damage helmet, or armor, not both
@@ -760,7 +760,6 @@ function on_game_start()
         restore_sec.restore_cond = ini_restore:r_float_ex(section, "restore_cond")
         repair_item_restoration[section] = restore_sec
     end)
-    parts_map["prt_o_support_1"] = "prt_o_support"
 	RegisterScriptCallback("ActorMenu_on_item_drag_drop",on_item_drag_dropped)
     RegisterScriptCallback("actor_on_before_hit",actor_on_before_hit)
 	RegisterScriptCallback("actor_item_to_slot",actor_item_to_slot)
