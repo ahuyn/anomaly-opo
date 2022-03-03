@@ -187,16 +187,16 @@ end
 OnRepair = item_repair.UIRepair.OnRepair
 
 function item_repair.UIRepair:OnRepair()	
-	if get_config("ui") then
+	if get_config("ui") and not zz_item_repair_keep_crafting_window_open then -- Compatibility with Keep Crafting Window Open
 		repair_ui.close()
 	end
 	local obj_1 = self.CC[1]:GetCell_Selected(true)
 	local obj_2 = self.CC[2]:GetCell_Selected(true)
-	OnRepair(self)
     if has_parts(obj_1) then
         repair_parts(obj_1, self.obj:section(), obj_2)
         cap_condition(obj_1)
     end
+    OnRepair(self)
 end
 
 RepairCancel = item_repair.UIRepair.OnCancel
