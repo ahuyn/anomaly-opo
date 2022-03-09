@@ -1,0 +1,78 @@
+ini_map = ini_file("items\\settings\\armor_converter_map.ltx")
+ini_parts = itms_manager.ini_parts
+
+-- convert a parts table to follow format
+-- use opo rank formula if installed
+function convert_parts_table(tbl)
+    local new_table = {}
+    for key,value in pairs(tbl) do
+        local rank = arti_outfits.rank_component(key)
+        if not new_table[rank] then
+            new_table[rank] = {value}
+        else
+            table.insert(new_table[rank], value)
+        end
+    end
+    return new_table
+end
+
+function convert_outfit(old_outfit, new_outfit_sec)
+    local old_cond = old_outfit:condition()
+    local parent = old_outfit:parent()
+	
+    -- salvage upgrades 
+    local installed_upgrades = utils_item.get_upgrades_installed(old_outfit)
+	local upgr_tools = {}
+    local salvage_chance = get_config("salvage_chance") or 50
+	for i=1,#installed_upgrades do
+		local tool = utils_item.get_upgrade_sect_tool(old_outfit:section(), installed_upgrades[i])
+		-- table.insert(upgr_tools,tool)
+        if math.random(100) < salvage_chance then
+            alife_create_item(tool, parent)
+        end
+	end
+
+    -- create new outfit
+    outfit_id = death_manager.spawn_with_condition(parent, new_outfit_sec, old_cond)
+    -- if opo, migrate the part conds as best you can
+    if arti_outfits then
+        local old_parts = convert_parts_table(item_parts.get_parts_con(old_outfit))
+
+        local parts = ini_parts:r_string_ex("con_parts_list",new_outfit_sec)
+        if parts then
+            local new_parts = {}
+            new_parts[new_outfit_sec] = math.ceil(old_cond*100)
+            parts = str_explode(parts, ",")
+            for k,v in pairs(parts) do
+                local rank = arti_outfits.rank_component(v)
+                local old_conds = old_parts[rank]
+                if old_conds and #old_conds > 0 then
+                    new_parts[v] = old_conds[#old_conds]
+                    old_conds[#old_conds] = nil
+                else
+                    new_parts[v] = 99
+                end
+            end
+            se_save_var(outfit_id, nil, "parts", new_parts)
+        end
+    end
+    alife_release(old_outfit)
+end
+
+
+local defaults = {
+    ["salvage_chance"] = 50,
+}
+
+function get_config(key)
+    if ui_mcm then return ui_mcm.get("armormod/"..key) else return defaults[key] end
+end
+
+function on_mcm_load()
+    op = { id= "armormod",sh=true ,gr={
+            { id= "title",type= "slide",link= "ui_options_slider_player",text="ui_mcm_armormod_title",size= {512,50},spacing= 20 },
+            {id = "salvage_chance", type = "track", val = 2, min=0,max=100,step=10, def = 50},
+        }
+    }
+    return op
+end

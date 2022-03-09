@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    <string id="st_paintkit_sunrise">
+        <text>'Sunrise' Camouflage Mod kit</text>
+    </string>
+    <string id="st_paintkit_sunrise_descr">
+        <text>Package of special outfit materials carefully assembled by Loner technicians. Contains a variety of insulation materials, layers of kevlar fabric, armor accessories, and woodland colored cloth paint. Stalkers often modify their Sunrise suits with whatever materials they can get their hands on, adding, replacing, and repairing parts as they go. Veteran stalkers often will have completely replaced every part of their suits at least once, if not several times.</text>
+    </string>
+
+    <string id="st_paintkit_lcs">
+        <text>Mercenary Light Armor Mod kit</text>
+    </string>
+    <string id="st_paintkit_lcs_descr">
+        <text>
+            Package containing various flexible armor components, pouches and straps, all painted and styled the Mercenary colors. Most Mercenaries in the Zone do not stay for long, at least not long enough to warrant investing heavily in better equipment. As such, the standard LCS suit is designed with modularity in mind, able to be quickly modified to adapt to the unique conditions in the Zone.
+        </text>
+    </string>
+    <string id="st_paintkit_dooty">
+        <text>Duty PS5 Armor Mod kit</text>
+    </string>
+    <string id="st_paintkit_dooty_descr">
+        <text>
+            Package containing various ballistic and insulating fabrics, commonly used by Dutyers to customize their suits. Duty's long presence in the Zone and relatively stable position in Rostok has allowed them to experiment with various types of physical and environmental protection. As such, new recruits issued their PS5 suits are encouraged to customize their equipment to suit their needs.
+        </text>
+    </string>
+
+    <string id="st_paintkit_eco">
+        <text>SSP Insulation Kit "Gemstone"</text>
+    </string>
+    <string id="st_paintkit_eco_descr">
+        <text>
+            A very big and colorful set of insulation materials stamped with the official seal of the Ministry of Science. These sets are designed to maintain and modify standard SSP environmental protection suits. While officially this is a repair kit to maintain several SSP suits, unofficially these kits can be used to alter and modify SSP suits to tailor them to specific situations. In addition to the insulation materials, there is also a guide that tells you how to reset the SSP life support unit.
+        </text>
+    </string>
+    <string id="st_paintkit_exo">
+        <text>Exoskeleton Installation kit</text>
+    </string>
+    <string id="st_paintkit_exo_descr">
+        <text>This package contains an exoskeleton frame, power supply system and special tools to install mount points on compatible outfits, enabling the user to transform certain outfits into exoskeletons. Exoskeleton installation is usually done in factories due to the heavy equipment required to fasten and calibrate the exoskeleton, but clever Zone technicians have made use of common hand tools and 'recycled' exoskeleton frame systems to allow modification and installation to a wide variety of outfits. Because the installation process involves permanent fastening of the frame to the outfit, the process is irreversible. Batteries not included.</text>
+    </string>
+    
+    <string id="st_paintkit_noso">
+        <text>'Rhino' Exoskeleton Upgrade kit</text>
+    </string>
+    <string id="st_paintkit_noso_descr">
+        <text>A package of specially shaped armor plates and installation tools along with a heavy CZ-M10 helmet. Upgrades certain types of exoskeletons by replacing the helmet and grafting irremovable armor plates to certain parts of the exoskeleton frame and exosuit. While the process makes the body armor second to none in terms of pure ballistic protection, it is extremely heavy and taxes the support system.</text>
+    </string>
+
+    <string id="st_paintkit_seva">
+        <text>'Pathfinder' SEVA Upgrade kit</text>
+    </string>
+    <string id="st_paintkit_seva_descr">
+        <text>
+            Special toolkit used to enhance SEVA bodysuits. Produced exclusively by the Clear Sky faction, these sets are assembled with Novikov's decades of experience in designing and building protective gear for the Zone and released in extremely limited quantity. The choice of materials here are extremely expensive and difficult to get ahold of, but their light weight and excellent insulating qualities make them second to none in terms of anomalous protection. With this set, you can upgrade certain SEVA suits into their 'Pathfinder' variants.
+        </text>
+    </string>
+
+    <string id="st_paintkit_ace">
+        <text>'Ace' SEVA Upgrade kit</text>
+    </string>
+    <string id="st_paintkit_ace_descr">
+        <text>
+            Special toolkit used to enhance SEVA bodysuits. This outfit set was put together by Novikov on a special contract to create the best possible scientific suit for a wealthy Mercenary client with no expense spared. The material here is the best of the best, simultaneously light, breathable, durable, and highly protective. Fortunately for you, however, said Mercenary client has met their end at the claws of a Chimera before collecting on their suit, so now this upgrade kit is available for you to buy.
+        </text>
+    </string>
+    
+    <string id="ui_mcm_menu_armormod">
+        <text>Armor Modkits</text>
+    </string>
+    <string id="ui_mcm_armormod_title">
+        <text>Armor Modkit Settings</text>
+    </string>
+    <string id="ui_mcm_armormod_salvage_chance">
+        <text>Upgrade Salvage Chance</text>
+    </string>
+    <string id="ui_mcm_armormod_salvage_chance_desc">
+        <text>Control what percent of upgrades will be returned to the player when upgrading gear. Refunds will be returned at random, so there is no guarantee.</text>
+    </string>
+    <string id="st_ui_itm_upgrade_base">
+        <text>Modifiable Equipment</text>
+    </string>
+    <string id="st_ui_itm_upgrade_choice">
+        <text>Modification Choices</text>
+    </string>
+    <string id="st_ui_mm_modify">
+        <text>Modify</text>
+    </string>
+
+</string_table>

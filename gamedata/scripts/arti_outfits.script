@@ -427,8 +427,8 @@ function to_infobox(parts)
                 ["total"] = 0,
                 ["max"] = 0,
             } end
-            result[rank].total = result[rank].total + v + 1
             result[rank].max = result[rank].max + 100
+            result[rank].total = clamp(result[rank].total + v + 1, 0, result[rank].max)
         end
     end
     return result
@@ -520,6 +520,8 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
         news_manager.send_tip(db.actor, gc("st_no_helm"), nil, "swiss_knife", 6000)
     end
 end
+
+
 
 OnUIRepair = ui_inventory.UIInventory.RMode_RepairYes
 

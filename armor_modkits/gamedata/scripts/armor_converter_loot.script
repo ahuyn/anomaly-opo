@@ -1,0 +1,123 @@
+-- control where these kits are populated
+
+-- im lazy
+-- 60/30/10 split
+map_tiers = {
+    ["l01_escape"]              = "paintkit_sunrise,4", -- cordon
+    -- ["l01_escape"]              = {{ 4, 41, 71, 71, 81, 81 }, { 4, 41, 71, 71, 81, 81 }, { 4, 41, 71, 71, 81, 81 }}, -- cordon
+    ["k00_marsh"]               = "paintkit_sunrise,4", -- great swamps
+    ["y04_pole"]                = "paintkit_sunrise,4",
+    ["k01_darkscape"]           = "paintkit_sunrise,4", -- dankscape
+
+    ["l02_garbage"]             = "paintkit_sunrise,4", -- garbage
+    
+    ["l05_bar"]                 = "paintkit_duty_ps5,4", -- rostok
+    ["k02_trucks_cemetery"]     = "paintkit_duty_ps5,4", -- truck ceme
+    ["l06_rostok"]              = "paintkit_duty_ps5,4", -- WT
+
+    ["l07_military"]            = "paintkit_merc_lcs,4", -- AW
+    ["l09_deadcity"]            = "paintkit_merc_lcs,4", -- dead city
+    ["l10_limansk"]             = "paintkit_merc_lcs,4",
+    ["l10_red_forest"]          = "paintkit_exo",
+    
+    ["l11_hospital"]            = "paintkit_nosorog,1",
+    ["l10_radar"]               = "paintkit_exo,1",
+    ["jupiter"]                 = "paintkit_eco_ssp,4", -- jupiter
+    ["zaton"]                   = "paintkit_exo,1",
+    ["l11_pripyat"]             = "paintkit_exo,1", -- central pripyat
+    ["pripyat"]                 = "paintkit_exo,1", -- outskirts
+
+    ["l12_stancia"]             = "paintkit_exo,4", -- cnpp north
+    ["l12_stancia_2"]           = "paintkit_nosorog,1", -- cnpp south
+    ["l12u_sarcofag"]           = "paintkit_nosorog,1", -- sarcophagus
+    ["l12u_control_monolith"]   = "paintkit_nosorog,1",
+    ["l13_generators"]          = "paintkit_nosorog,1",
+}
+
+local ini_trade_map = ini_file("items\\settings\\armor_converter_trade.ltx")
+
+TraderAuto = trader_autoinject.update
+function trader_autoinject.update(npc)
+    TraderAuto(npc)
+    add_kits(npc) -- you define this function ok
+end
+
+-- str_explode but they get parsed into numbers
+function str_explode_num(str, sep, plain)
+	if not (str and sep) then
+		printe("!ERROR str_explode | missing parameter str = %s, sep = %s",str,sep)
+		callstack()
+	end
+	if not (sep ~= "" and str:find(sep,1,plain)) then
+		return { tonumber(str) }
+	end
+	local t = {}
+	local size = 0
+	for s in str:gsplit(sep,plain) do 
+		size = size + 1
+		t[size] = tonumber(trim(s))
+	end
+	return t
+end
+
+function add_kits(npc)
+    local npc_name = npc:section()
+    local npc_level = trader_autoinject.supply_level(npc, true)
+    if ini_trade_map:section_exist(npc_name) then
+        local trade_table = {}
+        local n = ini_trade_map:line_count(npc_name)
+        for i=0,n-1 do
+            _, kit, values = ini_trade_map:r_line_ex(npc_name, i)
+            values = str_explode_num(values, ",")
+            if npc_level >= values[2] then
+                trade_table[kit] = values[1]
+            end
+        end
+        trader_autoinject.spawn_items(npc, trade_table, true)
+    end 
+end
+
+local box_contents = {}
+
+-- monkey patch loot managers
+SpawnTreasure = treasure_manager.try_spawn_treasure
+
+function treasure_manager.try_spawn_treasure(box)
+    local id = box:id()
+
+	--printf("try_spawn_treasure [%s]",caches[id])
+    -- no spawn if the cache is already looted
+	if not (treasure_manager.caches[id]) then
+		return
+	end
+    SpawnTreasure(box)
+    
+    local se_obj = alife_object(box:id()) 
+    local lvl = alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
+    if map_tiers[lvl] then
+        to_spawn = str_explode(map_tiers[lvl], ",")
+        if math.random(100) <= tonumber(to_spawn[2]) then
+            se_itm = alife_create_item(to_spawn[1], box)
+            box_contents[id] = true
+        end
+    end
+end
+function actor_on_item_take_from_box(box,itm)
+    local id = box:id()
+    if box_contents[id] == true then
+        box_contents[id] = nil
+    end
+end
+
+local function save_state(mdata) 
+	mdata.box_contents = box_contents
+end
+
+local function load_state(mdata) 
+	box_contents = mdata.box_contents or {}
+end
+
+function on_game_start()
+    RegisterScriptCallback("save_state",save_state)
+    RegisterScriptCallback("load_state",load_state)
+end
