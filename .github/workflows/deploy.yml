@@ -41,7 +41,7 @@ jobs:
         run: echo "::set-output name=today::$(date +'%Y.%m.%d')"
 
       - name: Zip folder
-        run: zip -r $RELEASE_NAME.zip gamedata README *.txt "armor crafter" "wpo patch" "outfit speed patch"
+        run: zip -r $RELEASE_NAME.zip gamedata README *.txt "armor crafter" "wpo patch" "outfit speed patch" "armor_modkits"
         env: 
           RELEASE_NAME: ${{ github.event.repository.name }}.${{ steps.date.outputs.today }}
       
