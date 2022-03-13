@@ -18,7 +18,7 @@ map_tiers = {
     ["l07_military"]            = "paintkit_merc_lcs,4", -- AW
     ["l09_deadcity"]            = "paintkit_merc_lcs,4", -- dead city
     ["l10_limansk"]             = "paintkit_merc_lcs,4",
-    ["l10_red_forest"]          = "paintkit_exo",
+    ["l10_red_forest"]          = "paintkit_exo,1",
     
     ["l11_hospital"]            = "paintkit_nosorog,1",
     ["l10_radar"]               = "paintkit_exo,1",
