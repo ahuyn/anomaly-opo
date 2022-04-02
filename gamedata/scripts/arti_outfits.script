@@ -1,6 +1,7 @@
 local ini_parts   = itms_manager.ini_parts
 get_config = arti_outfits_mcm.get_config
 gc = game.translate_string
+math_floor = math.floor
 -- id of current outfit
 local current_outfit = 0
 -- copied parts condition for current outfit
@@ -197,7 +198,6 @@ end
 -- apply amount damage to all parts of the outfit
 -- if it is lower than certain threshold, ignore it altogether
 -- todo helmet damage should be affected by helmet immunities?
-local DAMAGE_THRESHOLD = 0.1
 function degrade_parts(type, amount, helmet_only)
     print_dbg("Degrading parts, actor took %s amount of %s type damage. Player shot in head? %s", amount, type, helmet_only)
     if is_empty(current_outfit_parts) then return end
@@ -209,13 +209,13 @@ function degrade_parts(type, amount, helmet_only)
         -- bullets only damage helmet, or armor, not both
         elseif (type == "fire_wound" and ((rank == 1 and helmet_only) or (rank ~= 1 and not helmet_only))) or type ~= "fire_wound" then
             -- modify damage amt against part types and apply to part (out of 100)
-            local final_damage = math.floor(100 * amount * (i2m[d2i[type]][rank]))
-            if final_damage > DAMAGE_THRESHOLD then
-                current_outfit_parts[k] = clamp(v - final_damage , 0, 99) 
-                print_dbg("Component %s took %s damage, condition now %s", k, final_damage, current_outfit_parts[k])
-            else
-                print_dbg("Component %s took no damage", k)
+            local final_damage = 100 * amount * (i2m[d2i[type]][rank])
+            if get_config("round") then
+                final_damage = math_floor(final_damage)
             end
+            current_outfit_parts[k] = clamp(v - final_damage , 0, 99) 
+            print_dbg("Component %s took %s damage, condition now %s", k, final_damage, current_outfit_parts[k])
+            
         end
     end
     -- item_parts.set_parts_con(current_outfit, current_outfit_parts)
@@ -412,7 +412,7 @@ function average_cond(parts)
             num = num + 1
         end
     end
-    local final_cond = 20 + math.floor(0.8*(total/num))
+    local final_cond = 20 + math_floor(0.8*(total/num))
     if final_cond > 97 then final_cond = 100 end
     return final_cond
 end
@@ -472,7 +472,7 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     if not IsHeadgear(helmet) then return end
 
 	local helmet_sec = helmet and helmet:section() or nil
-    local helmet_con = math.floor(helmet:condition() * 100)
+    local helmet_con = math_floor(helmet:condition() * 100)
     local outfit_sec = outfit and outfit:section() or nil
     local outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
     local helmet_kit = db.actor:object("helmet_repair_kit")
@@ -503,7 +503,7 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
         utils_stpk.set_item_data(data,helm_to_spawn)
         alife():register(helm_to_spawn)
 
-        outfit_parts[found_helmet] = math.floor(helmet:condition() * 100)
+        outfit_parts[found_helmet] = math_floor(helmet:condition() * 100)
 
         local contribution = (helmet:condition() * 0.8) / (num_parts - 1)
         print_dbg("Helmet contribution to condition: "..contribution)
@@ -632,8 +632,8 @@ function inventory_upgrades_mp.how_much_repair( item_name, item_condition )
             base_cost = base_cost / 2
             base_cost = base_cost + get_repair_parts_cost(obj)
         end
-        --return math.floor( cost * factor * math.pow(1 - item_condition , 1.63) )
-        return math.floor( base_cost * cof ) -- CoP formula
+        --return math_floor( cost * factor * math.pow(1 - item_condition , 1.63) )
+        return math_floor( base_cost * cof ) -- CoP formula
     else
         return HowMuch(item_name, item_condition)
     end
@@ -697,7 +697,7 @@ function ui_item.build_desc_header(obj, sec, str)
             clr_con = utils_xml.get_color_con(v.total*100/v.max)
             pad = k == 2 and " " or ""
             cond_str = string.format("%-20s"..pad, gc("st_type_"..k) .. " " .. gc("st_type_integrity"))
-            str = "  " .. gc("st_dot").. "  " .. cond_str ..clr_con ..  "  " .. v.total .. "/" .. v.max .. clr_2 .. " \\n"
+            str = "  " .. gc("st_dot").. "  " .. cond_str ..clr_con ..  "  " .. math_floor(v.total) .. "/" .. v.max .. clr_2 .. " \\n"
 			_str = _str .. str
 		end
 	end

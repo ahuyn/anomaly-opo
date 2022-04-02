@@ -2,6 +2,7 @@ part_compatible = arti_outfits.part_compatible
 print_dbg = arti_outfits.print_dbg
 get_config = arti_outfits_mcm.get_config
 
+math_floor = math.floor
 has_parts = arti_outfits.has_parts
 rank_component = arti_outfits.rank_component
 get_max_condition = arti_outfits.get_max_condition
@@ -18,7 +19,7 @@ function generate_readout(old, new)
 		diff = new[k] - v
 		if is_part(k) then
 			str = str .. ui_item.get_sec_name(k) .. ": \\n"
-			str = str .. v .. " + " .. diff .. " = " .. new[k] .. " \\n" 
+			str = str .. math_floor(v) .. " + " .. math_floor(diff) .. " = " .. math_floor(new[k]) .. " \\n" 
 		end
 	end
 	return str
@@ -59,6 +60,10 @@ function item_repair.UIRepair:InitInventory(n)
 		end)
 		
 		self.CC[1]:Reinit(inv)
+		if get_config("ui") then
+			repair_ui.start()
+			repair_ui.set_text("")
+		end
 
 	-- Compatible part list to use
 	elseif n == 2 then
@@ -77,7 +82,7 @@ function item_repair.UIRepair:InitInventory(n)
 				if (self.parts_match and sec == obj_s:section()) then
 					local part_bonus = obj:condition()
 					part_bonus = (game_achievements.has_achievement("mechanized_warfare")) and (part_bonus + 0.02) or part_bonus
-					part_bonus = clamp(math.floor(part_bonus*100)*self.parts_multi , 0 , 100)
+					part_bonus = clamp(math_floor(part_bonus*100)*self.parts_multi , 0 , 100)
 				
 					size_t = size_t + 1
 					inv[size_t] = obj
@@ -87,10 +92,10 @@ function item_repair.UIRepair:InitInventory(n)
 					local part_bonus = ini_sys:r_float_ex(sec,"repair_part_bonus") or self.part_bonus
                     local rank = rank_component(sec)
                     if (rank == 3 or rank == 4) and not is_part_match then 
-                        part_bonus = 0.01 * (math.floor(obj:condition() / 0.2))
+                        part_bonus = 0.01 * (math_floor(obj:condition() / 0.2))
                     end
 					part_bonus = (game_achievements.has_achievement("mechanized_warfare")) and (part_bonus + 0.02) or part_bonus
-					part_bonus = clamp(math.floor(part_bonus*100)*self.parts_multi , 0 , 100)
+					part_bonus = clamp(math_floor(part_bonus*100)*self.parts_multi , 0 , 100)
 
 					size_t = size_t + 1
 					inv[size_t] = obj
@@ -110,10 +115,6 @@ function item_repair.UIRepair:InitInventory(n)
 				ci:Add_CustomText( ("+"..con100), nil, nil, clr_b, fnt)
 			end
 		end
-	end
-	if get_config("ui") then
-		repair_ui.start()
-		repair_ui.set_text("")
 	end
 end
 
@@ -140,10 +141,10 @@ function item_repair.UIRepair:OnItemSelect(n)
 		con = is_part_match and obj_n:condition() or ini_sys:r_float_ex(sec,"repair_part_bonus") or self.part_bonus
         local rank = rank_component(sec)
         if (rank == 3 or rank == 4) and not is_part_match then 
-            con = 0.01 * (math.floor(obj_n:condition() / 0.2))
+            con = 0.01 * (math_floor(obj_n:condition() / 0.2))
         end
 		con = (game_achievements.has_achievement("mechanized_warfare")) and (con + 0.02) or con
-		con = clamp(math.floor(con*100)*self.parts_multi , 0 , 100)
+		con = clamp(math_floor(con*100)*self.parts_multi , 0 , 100)
 	end
 	
 	-- Text (Name)
@@ -153,7 +154,7 @@ function item_repair.UIRepair:OnItemSelect(n)
 	-- Text (Condition)
 	self.con_val[1] = math.ceil((obj_1:condition())*100) -- old condition
 	self.con_val[2] = ((n == 2) and con) or 0 -- support bonus
-	self.con_val[3] = math.floor((self.add_condition)*100) -- repair add
+	self.con_val[3] = math_floor((self.add_condition)*100) -- repair add
 	self.con_val[4] = clamp(self.con_val[1] + self.con_val[2] + self.con_val[3], 0, 100) -- total condition (cap this)
     local oldMaxCond = get_max_condition(obj_1)
 	local diff = get_projected_max(obj_1, self.section, obj_n)
@@ -179,7 +180,7 @@ function item_repair.UIRepair:OnItemSelect(n)
 		self.text_item[2]:SetText("")
 	end
 	if get_config("ui") then
-		repair_ui.set_text(generate_readout(diff.old,	 diff.new))
+		repair_ui.set_text(generate_readout(diff.old, diff.new))
 	end
 	self.btn_repair:Enable(true)
 end

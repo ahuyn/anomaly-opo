@@ -55,7 +55,7 @@
 		<text>Outfit Parts Overhaul</text>
 	</string>
 	<string id="ui_mcm_menu_outfit">
-		<text>Outfit Parts Overhaul</text>
+		<text>OPO</text>
 	</string>
 	<string id="ui_mcm_outfit_damage">
 		<text>Part damage multiplier</text>
@@ -68,6 +68,12 @@
 	</string>
 	<string id="ui_mcm_outfit_debug_desc">
 		<text>Debug logging</text>
+	</string>
+	<string id="ui_mcm_outfit_round">
+		<text>Reduce scratch damage taken</text>
+	</string>
+	<string id="ui_mcm_outfit_round_desc">
+		<text>Check this option to make it so very small amounts of damage do not accrue on the suit components. This will also tidy up display by making it so long floats aren't printed in item stats.</text>
 	</string>
     
 	<string id="ui_mcm_outfit_ui">
