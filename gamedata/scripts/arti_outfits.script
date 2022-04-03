@@ -180,7 +180,7 @@ local dtype = {
 -- categories of damage are: fabrics, retardants, ballistics, helms, support
 local PART_DMG_COEF = 0.9
 function actor_on_before_hit(shit,bone_id)
-    if current_outfit ~= 0 then
+    if current_outfit ~= 0 and current_outfit_immunity[dtype[shit.type]] then
         dump_immunities()
         local immunity_name = d2i[dtype[shit.type]]
         local immunity_val = current_outfit_immunity[dtype[shit.type]]
