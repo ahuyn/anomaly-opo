@@ -449,6 +449,7 @@ end
 -- Round off the condition of the outfit (to be applied after parts repairs are done)
 function cap_condition(outfit)
     local outfit_max_condition = get_max_condition(outfit)/100
+    print_dbg("Max cond for %s is %s", outfit:section(), outfit_max_condition)
     if outfit:condition() > outfit_max_condition then
         outfit:set_condition(outfit_max_condition)
     end
@@ -549,10 +550,10 @@ function item_parts.evaluate_parts(obj)
 		local data = se_load_var(id, obj:name(), "parts")
 
 		-- Savegame compatibility. Recalculate with changed parts
-		if data and data[sec] then
-			for i=1,#parts do
-				if (not data[parts[i]]) then
-					empty_table(data)
+		if data then
+			for k,v in pairs(parts) do
+				if (not data[v]) then
+					data = nil
 					break
 				end
 			end

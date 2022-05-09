@@ -53,3 +53,14 @@ function UIRepairWindow:Close()
 		exec_console_cmd("main_menu off")
 	end
 end
+
+function actor_on_net_destroy()
+	if GUI ~= nil then
+		GUI = nil
+	end
+end
+
+function on_game_start()
+	RegisterScriptCallback("actor_on_net_destroy",actor_on_net_destroy)
+
+end
