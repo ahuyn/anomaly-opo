@@ -69,11 +69,13 @@ function add_kits(npc)
         for i=0,n-1 do
             _, kit, values = ini_trade_map:r_line_ex(npc_name, i)
             values = str_explode_num(values, ",")
-            if npc_level >= values[2] then
+            if npc_level and npc_level >= values[2] then
                 trade_table[kit] = values[1]
             end
         end
-        trader_autoinject.spawn_items(npc, trade_table, true)
+	if not is_empty(trade_table) then
+	    trader_autoinject.spawn_items(npc, trade_table, true)
+	end
     end 
 end
 
