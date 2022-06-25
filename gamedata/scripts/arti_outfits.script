@@ -100,8 +100,11 @@ function has_parts(outfit)
 end
 
 function is_part(sec)
-    return SYS_GetParam(1, sec, "cond_part") or SYS_GetParam(0, sec, "kind") == "o_helmet"
-    -- return string.find(sec, "prt_o") or string.find(sec, "helm_")
+    return SYS_GetParam(1, sec, "cond_part") or is_helmet(sec)
+end
+
+function is_helmet(sec)
+    return SYS_GetParam(0, sec, "kind") == "o_helmet"
 end
 
 function is_worn(obj)
@@ -112,7 +115,6 @@ end
 function actor_item_to_slot(outfit)
     -- why the fuck is workbench like this
     if not outfit or type(outfit) == "number" then return end
-    print_dbg("to slot %s", outfit:section())
     if is_worn(outfit) then
         if outfit:id() ~= current_outfit then flush_parts() end
         update_current_parts(outfit)
@@ -218,7 +220,6 @@ function degrade_parts(type, amount, helmet_only)
             
         end
     end
-    -- item_parts.set_parts_con(current_outfit, current_outfit_parts)
     flush_parts()
 end
 
@@ -248,15 +249,6 @@ end
 function rank_component(name)
     return parts_map[name] or 1
 end
-
--- local functor = function(t,a,b) 
---     local rank_a = a and rank_component(a) or 0
---     local rank_b = b and rank_component(b) or 0
---     if rank_a ~= rank_b then return rank_a > rank_b
---     else
---         return a > b 
---     end
--- end
 
 -- restore max condition to the outfit in question
 function repair_parts(outfit, repair_item, support_part)
@@ -343,8 +335,7 @@ function calc_parts_repair(outfit_parts_original, repair_item, support_part, pri
     end
     local outfit_parts = {}
     copy_table(outfit_parts, outfit_parts_original)
-    local restore_cond = repair_class.restore_cond --* get_bonus(support_part, repair_item, outfit_parts)
-    local cond_bonus = get_bonus()
+    local restore_cond = repair_class.restore_cond 
     -- if support part is a part, apply the part cond directly to new part
     support_sec = support_part and support_part:section() or "none"
     if parts_map[support_sec] then
@@ -384,8 +375,8 @@ function get_projected_max(outfit, repair_item, support_part)
     local outfit_parts = get_parts(outfit)
     local new_outfit_parts = calc_parts_repair(outfit_parts, repair_item, support_part,false)
     return {
-        ["old"] = outfit_parts,
-        ["new"] = new_outfit_parts,
+        old = outfit_parts,
+        new = new_outfit_parts,
     }
     -- return average_cond(new_outfit_parts)
 end
@@ -463,12 +454,47 @@ function ui_max_condition(outfit)
     return cond
 end
 
-function replace_helmet(helmet, outfit, kit)
-
+function precond_repair(outfit)
+    if not has_parts(outfit) then return end
+    
+    local outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
+    local found_helmet = nil
+    for k,v in pairs(outfit_parts) do
+        if is_helmet(k) and v < 99 then
+            found_helmet = k
+        end
+    end
+    if not found_helmet then return end
+    local repairkit = db.actor:object("helmet_repair_kit")
+    if not repairkit then return end
+    return game.translate_string("ui_inv_repair") .. " " .. game.translate_string("st_type_1")
 end
 
--- for reattaching helmet, burn one use of helmet repair kit to swap   
+function do_repair(object)
+    repair_helmet(object, db.actor:object("helmet_repair_kit"))
+end
+
+function repair_helmet(outfit, kit)
+    
+    local outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
+    local found_helmet = nil
+    for k,v in pairs(outfit_parts) do
+        if is_helmet(k) then
+            found_helmet = k
+        end
+    end
+    if not found_helmet then return end
+    local repair_amt = math.floor(SYS_GetParam(2, kit:section(), "repair_add_condition") * 100)
+    utils_item.discharge(kit)
+    outfit_parts[found_helmet] = clamp(outfit_parts[found_helmet] + repair_amt, 0, 100)
+    item_parts.set_parts_con(outfit:id(), outfit_parts)
+    check_reset_parts(outfit)
+end
+
 function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
+    if not (slot_from == EDDListType.iActorBag and (slot_to == EDDListType.iActorBag or slot_to == EDDListType.iActorSlot)) then
+        return
+    end
     if not has_parts(outfit) then return end
     if not IsHeadgear(helmet) then return end
 
@@ -476,52 +502,48 @@ function on_item_drag_dropped(helmet, outfit, slot_from, slot_to)
     local helmet_con = math_floor(helmet:condition() * 100)
     local outfit_sec = outfit and outfit:section() or nil
     local outfit_parts = dup_table(item_parts.get_parts_con(outfit, nil, true))
-    local helmet_kit = db.actor:object("helmet_repair_kit")
-    if not helmet_kit then
-        news_manager.send_tip(db.actor, gc("st_no_helmkit"), nil, "swiss_knife", 6000)
-        return
-    end
 
-    local found_helmet = nil
-    local num_parts = 0
-    for k,v in pairs(outfit_parts) do
-        print_dbg("Checking %s", k)
-        num_parts = num_parts + 1
-        if k == helmet_sec then
-            found_helmet = k
-        end
-    end
-
-    if found_helmet then
-        if outfit_parts[found_helmet] >= helmet_con then
-            return
-        end
-        -- check existing helmet condition
-
-        local helm_to_spawn = alife_create(found_helmet, db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id(), false)
-        local data = utils_stpk.get_item_data(helm_to_spawn)
-        data.condition = outfit_parts[found_helmet]/100
-        utils_stpk.set_item_data(data,helm_to_spawn)
-        alife():register(helm_to_spawn)
-
-        outfit_parts[found_helmet] = math_floor(helmet:condition() * 100)
-
-        local contribution = (helmet:condition() * 0.8) / (num_parts - 1)
-        print_dbg("Helmet contribution to condition: "..contribution)
-        outfit:set_condition(outfit:condition() + contribution)
-        cap_condition(outfit)
-
-        utils_item.discharge(helmet_kit)
-        alife_release_id(helmet:id())
-        item_parts.set_parts_con(outfit:id(), outfit_parts)
-        check_reset_parts(outfit)
-        news_manager.send_tip(db.actor, gc("st_helm_success"), nil, "swiss_knife", 6000)
-    else
-        -- not found, return error
+    if not outfit_parts[helmet_sec] then 
         news_manager.send_tip(db.actor, gc("st_no_helm"), nil, "swiss_knife", 6000)
+        return 
     end
+    
+    local helm_to_spawn = alife_create(helmet_sec, db.actor:position(), db.actor:level_vertex_id(), db.actor:game_vertex_id(), db.actor:id(), false)
+    local data = utils_stpk.get_item_data(helm_to_spawn)
+    data.condition = outfit_parts[helmet_sec]/100
+    utils_stpk.set_item_data(data,helm_to_spawn)
+    alife():register(helm_to_spawn)
+
+    outfit_parts[helmet_sec] = helmet_con
+
+    alife_release_id(helmet:id())
+    item_parts.set_parts_con(outfit:id(), outfit_parts)
+    cap_condition(outfit)
+    check_reset_parts(outfit)
+    news_manager.send_tip(db.actor, gc("st_helm_success"), nil, "swiss_knife", 6000)
+    -- not found, return error
 end
 
+
+NameCustom = ui_inventory.UIInventory.Name_Custom
+function ui_inventory.UIInventory:Name_Custom(obj, bag, temp, i)
+	obj = self:CheckItem(obj,"Name_Custom " .. i)
+	if i == 3 and IsOutfit(obj) then -- menu field strip
+		return precond_repair(obj)
+    else
+		return NameCustom(self, obj, bag, temp, i)
+	end
+end
+
+ActionCustom = ui_inventory.UIInventory.Action_Custom
+function ui_inventory.UIInventory:Action_Custom(obj, bag, temp, i)
+	obj = self:CheckItem(obj,"Action_Custom " .. i)
+	if i == 3 and IsOutfit(obj) then -- menu field strip
+		do_repair(obj)
+	else
+		ActionCustom(self, obj, bag, temp, i)
+	end
+end
 
 
 OnUIRepair = ui_inventory.UIInventory.RMode_RepairYes
@@ -621,22 +643,18 @@ HowMuch = inventory_upgrades_mp.how_much_repair
 
 function inventory_upgrades_mp.how_much_repair( item_name, item_condition )
     local type = SYS_GetParam(0, item_name, "repair_type") or "none"
+    local base_cost = HowMuch(item_name, item_condition)
     if outfit_repairs[type] and inventory_upgrades_mp.section_has_parts(item_name) then
         print_dbg("Getting cost for %s", item_name)
-        local cost = ini_sys:r_u32(item_name, "cost")
-        local class = ini_sys:r_string_ex(item_name, "class")
-        local cof = game_difficulties.get_eco_factor("repair") or 1.67
-
         local obj = repair_id and level.object_by_id(repair_id) or nil
-        local base_cost = cost * (1 - item_condition)
         if obj then
             base_cost = base_cost / 2
             base_cost = base_cost + get_repair_parts_cost(obj)
         end
         --return math_floor( cost * factor * math.pow(1 - item_condition , 1.63) )
-        return math_floor( base_cost * cof ) -- CoP formula
+        return math_floor( base_cost ) -- CoP formula
     else
-        return HowMuch(item_name, item_condition)
+        return base_cost
     end
 end
 
