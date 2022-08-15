@@ -549,8 +549,9 @@ end
 OnUIRepair = ui_inventory.UIInventory.RMode_RepairYes
 
 function ui_inventory.UIInventory:RMode_RepairYes()
-    
+
 	local obj = level.object_by_id(self.upgr.id)
+    print_dbg("Restoring parts for %s", obj:section())
     OnUIRepair(self)
     if has_parts(obj) then
 		tech_restore_parts(obj)

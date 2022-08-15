@@ -159,7 +159,6 @@ function item_repair.UIRepair:OnItemSelect(n)
     local oldMaxCond = get_max_condition(obj_1)
 	local diff = get_projected_max(obj_1, self.section, obj_n)
 	local maxCond = average_cond(diff.new)
-    -- local maxCond = get_projected_max(obj_1, self.section, obj_n)
     print_dbg("Projected max is %s", maxCond)
 	if IsItem("part",nil,obj_1) then
 		self.con_val[4] = utils_item.get_cond_static(self.con_val[4])
