@@ -9,7 +9,9 @@ local current_outfit_parts = {}
 -- actor's current damage immunities
 local current_outfit_immunity = {}
 
-local ini_restore = ini_file("items\\settings\\outfit_repair.ltx")
+ini_restore = ini_file("items\\settings\\outfit_repair.ltx")
+ini_custom_repair = ini_file("repair\\importer.ltx")
+
 local repair_item_restoration = {}
 -- damage 2 immunity:
 local d2i = {
@@ -242,6 +244,26 @@ function get_bonus(part, repair_name, outfit_parts)
     return 1
 end
 
+local repair_tiers = {
+    ["outfit_novice"] = 1,
+    ["outfit_light"] = 1,
+    ["outfit_medium"] = 2,
+    ["outfit_heavy"] = 3,
+    ["outfit_exo"] = 3,
+    ["helmet_light"] = 1,
+    ["helmet"] = 2,
+    ["helm_metro"] = 3,
+    ["helm_exo"] = 3,
+    ["helm_spartan"] = 3,
+}
+
+-- generate rank of an outfit/helmet
+function tier_outfit(sec)
+    if repair_tiers[sec] then return repair_tiers[sec] end
+    local repair_type = SYS_GetParam(0, sec, "repair_type") or ""
+    return repair_tiers[repair_type] or -1
+end
+
 function part_matching(part_name, part_list)
     local part_type = parts_map[part_name]
     return part_list[rank_component(part_name)]
@@ -256,7 +278,7 @@ function repair_parts(outfit, repair_item, support_part)
     local sec = outfit:section()
     print_dbg("Repairing %s with %s and %s", sec, repair_item, support_part and support_part:section() or "none")
     local outfit_parts = get_parts(outfit)
-    local new_outfit_parts = calc_parts_repair(outfit_parts, repair_item, support_part, true)
+    local new_outfit_parts = calc_parts_repair(sec, outfit_parts, repair_item, support_part, true)
     
     item_parts.set_parts_con(id, new_outfit_parts)
     check_reset_parts(outfit)
@@ -268,8 +290,8 @@ function distribute_repair(amt, repairable, outfit_parts_og)
     copy_table(outfit_parts, outfit_parts_og)
     local amount = amt
     local filtered_parts = {}
-    print_dbg("Before repair:")
-    dump_parts(outfit_parts)
+    -- print_dbg("Before repair:")
+    -- dump_parts(outfit_parts)
     -- copy only the repairable parts into here
     local count = 0
     for k,v in pairs(outfit_parts) do
@@ -320,13 +342,13 @@ function distribute_repair(amt, repairable, outfit_parts_og)
             outfit_parts[k] = v
         end
     end
-    print_dbg("After repair:")
-    dump_parts(outfit_parts)
+    -- print_dbg("After repair:")
+    -- dump_parts(outfit_parts)
     return outfit_parts
 end
 
 -- compute the projected value of the new outfit parts given the repair item + support part
-function calc_parts_repair(outfit_parts_original, repair_item, support_part, print)
+function calc_parts_repair(sec, outfit_parts_original, repair_item, support_part, print)
     print_dbg("Calculating parts repair with %s and support %s", repair_item, support_part and support_part:section() or "none")
     local repair_class = repair_item_restoration[repair_item]
     if not repair_class then 
@@ -335,7 +357,10 @@ function calc_parts_repair(outfit_parts_original, repair_item, support_part, pri
     end
     local outfit_parts = {}
     copy_table(outfit_parts, outfit_parts_original)
-    local restore_cond = repair_class.restore_cond 
+	local item_tier = a_repair_override.get_prop(repair_item, "repair_tier", 2) or 5
+	local outfit_tier = tier_outfit(sec)
+    local restore_cond = outfit_tier > item_tier and math_floor(repair_class.restore_cond/2) or repair_class.restore_cond
+    print_dbg("Item tier %s, outfit tier %s, restore cond is %s", item_tier, outfit_tier, restore_cond)
     -- if support part is a part, apply the part cond directly to new part
     support_sec = support_part and support_part:section() or "none"
     if parts_map[support_sec] then
@@ -354,8 +379,8 @@ function calc_parts_repair(outfit_parts_original, repair_item, support_part, pri
     for k,v in pairs(outfit_parts) do
         if v > outfit_parts_original[k] then
             local part_name = gc(ini_sys:r_string_ex(k, "inv_name"))
-            local string = strformat(gc("st_part_repaired"), part_name, outfit_parts[k])
-            str = str .. string .. "\\n"
+            local repaired = strformat(gc("st_part_repaired"), part_name, outfit_parts[k])
+            str = str .. repaired .. "\\n"
         end
     end
 
@@ -373,7 +398,7 @@ function get_projected_max(outfit, repair_item, support_part)
     
     if not has_parts(outfit) then return 100 end
     local outfit_parts = get_parts(outfit)
-    local new_outfit_parts = calc_parts_repair(outfit_parts, repair_item, support_part,false)
+    local new_outfit_parts = calc_parts_repair(outfit:section(), outfit_parts, repair_item, support_part,false)
     return {
         old = outfit_parts,
         new = new_outfit_parts,
@@ -710,8 +735,13 @@ function ui_item.build_desc_footer(obj, sec, str)
         for i=2,#repair  do
             str = str .. ", " .. gc("st_type_"..repair[i])
         end
-        str = str .. "\\n\\n"
+        str = str .. "\\n"
     end
+    local tier = ini_custom_repair:r_float_ex(sec, "repair_tier") or 0
+    if tier > 0 then
+        str = str .. clr_o .. "  ".. gc("st_dot") .." " .. clr_1 .. " " .. gc("st_tier_base") .. ": " .. clr_2 .. gc("st_tier_"..tier) .. "\\n"
+    end
+    str = str .. "\\n"
     return str
 end
 -- end monke
