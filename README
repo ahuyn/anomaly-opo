@@ -10,23 +10,23 @@ Why the hell can't we just glue together suits we find off people? Why are repai
 Repair is now possible for a completely destroyed outfit without workbench, given enough repair items. The idea is that as stronger repair items are accumulated, max condition of an outfit slowly rises up to 100%.
 
 # Features
-Outfit max condition:
+Outfit Max Condition
 - Outfits can be repaired from 0% with any repair item.
-- Outfits have a max condition dependent on the conditions of the parts.
+- Outfits have a max condition based on the condition of all the parts.
 - The max condition is 20% + (average of all parts) * 80%.
-- Attempting to repair past this threshold with repair items will result in being capped at the max condition.
+- Attempting to repair past this threshold with repair items will result in being capped at the max condition. This will be represented in repair UI.
 
-Outfit damage:
+Outfit Damage
 - Damage to the outfit will degrade parts conditions. This is based on outfit immunitites.
-- Different damage types affect outfit parts differently. Getting mauled by a Pseudodog will shred your fabrics but your armor plates should be reasonably intact. Acid will melt through your armor plates but your retardant components should resist the damage well. Electricity won't do much structural damage but will absolutely destroy your exo frames.
+- Different damage types affect outfit parts differently. Getting mauled by a Pseudodog will shred your fabrics but your armor plates should be reasonably intact. Acid will melt through your armor plates but your retardant components should resist the damage well. Electricity won't do much structural damage but will severely damage your exo frames.
 - Outfit condition does not affect how much damage the parts take.
 
-Component repair:
-- Sewing thread and field armor toolkit do nothing by themselves. Repairing components will need other components.
+Component Repair
+- Sewing thread and field armor toolkit do very little by themselves. Repairing components will need other components to maximize effectiveness.
 
-Outfit repair:
+Outfit Repair
 - Repair items have a suitability for a certain type of armor. Armor that is stronger than the suitability will suffer a repair penalty.
-- [Example] Tur glue is suited for medium armor, but can repair light and heavy armor. Heavy armor is stronger than medium armor, so when repairing heavy armor, the base cond restored is halved.
+- **Example:** Tur glue is suited for medium armor, but can repair light and heavy armor. Heavy armor is stronger than medium armor, so when repairing heavy armor, the base cond restored is halved.
 - Parts in the outfit can, in addition to being replaced, be repaired with certain repair items. How much component condition is restored and what can be restored depends on the repair item.
 - Generally speaking, glue and emergency armor repair are good for patch jobs and nothing else. Sewing kits can fix fabrics and retardants. Repair kits fix everything.
 - How this works is, when a repair item is used, the amount of "total condition restored" (rightmost column) is restored to parts eligible under "can repair".
