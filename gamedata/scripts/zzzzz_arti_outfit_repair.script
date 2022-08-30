@@ -11,6 +11,9 @@ repair_parts = arti_outfits.repair_parts
 cap_condition = arti_outfits.cap_condition
 average_cond = arti_outfits.average_cond
 is_part = arti_outfits.is_part
+tier_outfit = arti_outfits.tier_outfit
+ini_restore = arti_outfits.ini_restore
+ini_custom_repair = arti_outfits.ini_custom_repair
 
 
 function generate_readout(old, new)
@@ -126,15 +129,22 @@ function item_repair.UIRepair:OnItemSelect(n)
 		return
 	end
 
-
 	local sec = obj_n:section()
 	local id = obj_n:id()
 
+	local cond_1 = obj_1:condition()
+	local sec_r = self.obj:section()
+	local item_tier = a_repair_override.get_prop(sec_r, "repair_tier", 2)
+	if item_tier == 0 then item_tier = 5 end
+	local outfit_tier = tier_outfit(obj_1:section())
+	local repair_add = a_repair_override.get_prop(sec_r,"repair_add_condition", 2)
+	self.add_condition = outfit_tier > item_tier and repair_add/2 or repair_add
+	print_dbg("Repair item tier %s, outfit tier %s. Add condition %s", item_tier, outfit_tier, self.add_condition)
+	
     if not has_parts(obj_1) then 
         RepairOnItemSelect(self, n)
 		return
     end
-
 	local con = 0
 	if n == 2 then
 		local is_part_match = (self.parts_match and sec == obj_1:section())
@@ -159,7 +169,6 @@ function item_repair.UIRepair:OnItemSelect(n)
     local oldMaxCond = get_max_condition(obj_1)
 	local diff = get_projected_max(obj_1, self.section, obj_n)
 	local maxCond = average_cond(diff.new)
-    -- local maxCond = get_projected_max(obj_1, self.section, obj_n)
     print_dbg("Projected max is %s", maxCond)
 	if IsItem("part",nil,obj_1) then
 		self.con_val[4] = utils_item.get_cond_static(self.con_val[4])

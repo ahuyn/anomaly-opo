@@ -46,6 +46,20 @@
         <text>helmet</text>
     </string>
 
+    <string id="st_tier_base">
+        <text>suited to repair </text>
+    </string>
+    <string id="st_tier_1">
+        <text>light armors and respirators</text>
+    </string>
+    <string id="st_tier_2">
+        <text>medium armors and armored helmets/respirators</text>
+    </string>
+    <string id="st_tier_3">
+        <text>heavy armor, exoskeletons and heavily armored helmets</text>
+    </string>
+
+    
     <string id="st_type_integrity">
         <text>integrity:</text>
     </string>
@@ -105,11 +119,11 @@
             \n• Outfit components may be used in the repair. If used, they will directly increase the part that they match with. If not, they apply condition to parts in their category at 25% of their effectiveness.
             \n• Workshop replacement of parts does not restore max condition. To compensate, it is free and doesn't consume charges of repair kit.
 			\n \n
-            %c[pda_green]III. Armor Ripper%c[ui_gray_1]\n
+            %c[pda_green]III. Armor Crafter%c[ui_gray_1]\n
             \n• You can disassemble outfit parts to get base components!
             \n• To disassemble, use an appropriate tool or drag-drop a tool onto a part.
             \n• Condition affects amount of components you get.
-            \n• Outfit part components are used to assemble other outfit parts. The recipes are distributed amongst Advanced Kit books.
+            \n• Outfit part components are used to assemble other outfit parts. The recipes are distributed amongst Mechanics Manuals.
         </text>
     </string>
 
