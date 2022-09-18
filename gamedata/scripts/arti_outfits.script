@@ -82,7 +82,7 @@ function get_parts(outfit)
     if is_current then 
         return current_outfit_parts
     else
-        local fetched_parts = se_load_var(outfit:id(), nil, true)
+        local fetched_parts = se_load_var(outfit:id(), nil, "parts")
         if not fetched_parts or is_empty(fetched_parts) then
             -- force re-evaluation if parts are somehow nil
             item_parts.set_parts_con(outfit:id(), nil)
