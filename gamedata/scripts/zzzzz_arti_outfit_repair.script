@@ -36,7 +36,6 @@ function item_repair.UIRepair:InitInventory(n)
 	local size_t = 0
 
     local not_outfit = true
-
     for k,v in pairs(self.repair_only) do
         if string.find(k, "outfit_") then
             not_outfit = false
@@ -129,6 +128,11 @@ function item_repair.UIRepair:OnItemSelect(n)
 		return
 	end
 
+    if not has_parts(obj_1) then 
+        RepairOnItemSelect(self, n)
+		return
+    end
+
 	local sec = obj_n:section()
 	local id = obj_n:id()
 
@@ -141,10 +145,6 @@ function item_repair.UIRepair:OnItemSelect(n)
 	self.add_condition = outfit_tier > item_tier and repair_add/2 or repair_add
 	print_dbg("Repair item tier %s, outfit tier %s. Add condition %s", item_tier, outfit_tier, self.add_condition)
 	
-    if not has_parts(obj_1) then 
-        RepairOnItemSelect(self, n)
-		return
-    end
 	local con = 0
 	if n == 2 then
 		local is_part_match = (self.parts_match and sec == obj_1:section())
