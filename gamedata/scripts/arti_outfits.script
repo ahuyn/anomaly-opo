@@ -4,6 +4,8 @@ gc = game.translate_string
 math_floor = math.floor
 -- id of current outfit
 local current_outfit = 0
+-- section
+local current_outfit_sec = ""
 -- copied parts condition for current outfit
 local current_outfit_parts = {}
 -- actor's current damage immunities
@@ -138,6 +140,7 @@ end
 function update_current_parts(outfit)
 
     current_outfit = outfit:id()
+    current_outfit_sec = outfit:section()
     print_dbg("Current outfit set to %s", outfit:section())
     
     if has_parts(outfit) then
@@ -162,6 +165,7 @@ function actor_item_to_ruck(obj)
     if not db.actor:item_in_slot(7) then
         print_dbg("no outfit, purging")
         current_outfit = 0
+        current_outfit_sec = ""
         empty_table(current_outfit_parts)
         empty_table(current_outfit_immunity)
     end
@@ -200,7 +204,9 @@ function actor_on_before_hit(shit,bone_id)
         local immunity_name = d2i[dtype[shit.type]]
         local immunity_val = current_outfit_immunity[dtype[shit.type]]
         if immunity_name then
-            local coef = get_config("damage") or PART_DMG_COEF
+            local tier = tier_outfit(level.get_object_by_id(current_outfit):section())
+            local damage_coef = tier > 0 and get_config("damage_"..tier) or 1
+            local coef = damage_coef or PART_DMG_COEF
             local damage_to_armor = immunity_val * shit.power * coef
             -- in case actor got headshot only damage the attached helmet
             local helmet_only = (bone_id == 15 and shit.type == hit.fire_wound)
@@ -785,7 +791,6 @@ function on_game_start()
         parts_map["prt_o_fabrics_"..i] = 2
     end
     ini_restore:section_for_each(function(section)
-        print_dbg("Processing %s", section)
         restore_sec = {}
         restore_sec.can_repair = str_explode_num(ini_restore:r_string_ex(section, "can_repair"), ",")
         t2k_table(restore_sec.can_repair)

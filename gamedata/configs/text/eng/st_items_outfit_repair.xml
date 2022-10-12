@@ -71,11 +71,23 @@
 	<string id="ui_mcm_menu_outfit">
 		<text>OPO</text>
 	</string>
-	<string id="ui_mcm_outfit_damage">
-		<text>Part damage multiplier</text>
+	<string id="ui_mcm_outfit_damage_1">
+		<text>Part damage multiplier (Light outfits)</text>
 	</string>
-	<string id="ui_mcm_outfit_damage_desc">
-		<text>Multiplier on how much damage your outfit parts take.</text>
+	<string id="ui_mcm_outfit_damage_1_desc">
+		<text>Multiplier on how much damage parts of light outfits (novice jackets, light LCS suits) take.</text>
+	</string>
+	<string id="ui_mcm_outfit_damage_2">
+		<text>Part damage multiplier (Medium outfits)</text>
+	</string>
+	<string id="ui_mcm_outfit_damage_2_desc">
+		<text>Multiplier on how much damage parts of medium outfits (Sunrise suits, PS5 suits, light plate carriers) take.</text>
+	</string>
+	<string id="ui_mcm_outfit_damage_3">
+		<text>Part damage multiplier (Heavy outfits)</text>
+	</string>
+	<string id="ui_mcm_outfit_damage_3_desc">
+		<text>Multiplier on how much damage parts of heavy outfits (SKAT-9 armor, exosuits, exoskeletons) take. Be mindful that heavy outfits take less condition damage overall so it is more balanced to keep this coefficient relatively high.</text>
 	</string>
 	<string id="ui_mcm_outfit_debug">
 		<text>Debug logging</text>
