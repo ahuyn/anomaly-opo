@@ -204,7 +204,7 @@ function actor_on_before_hit(shit,bone_id)
         local immunity_name = d2i[dtype[shit.type]]
         local immunity_val = current_outfit_immunity[dtype[shit.type]]
         if immunity_name then
-            local tier = tier_outfit(level.get_object_by_id(current_outfit):section())
+            local tier = tier_outfit(level.object_by_id(current_outfit):section())
             local damage_coef = tier > 0 and get_config("damage_"..tier) or 1
             local coef = damage_coef or PART_DMG_COEF
             local damage_to_armor = immunity_val * shit.power * coef
