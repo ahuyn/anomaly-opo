@@ -216,3 +216,14 @@ function item_repair.UIRepair:OnCancel()
 	end
 	RepairCancel(self)
 end
+
+
+PrepStats = utils_ui.prepare_stats_table
+function utils_ui.prepare_stats_table()
+    PrepStats()
+    if not utils_ui.stats_table.outfit.max_condition then
+		printf("Add stats for max cond")
+        utils_ui.stats_table.outfit["max_condition"] = { 
+            index=0, typ= "float",   name= "ui_inv_max_condition", icon_p= "ui_am_propery_01",   icon_n= "", track= false, magnitude= 1, unit= "%", compare= false, sign= false, show_always= false , value_functor= {"arti_outfits","ui_max_condition"}}
+    end
+end
