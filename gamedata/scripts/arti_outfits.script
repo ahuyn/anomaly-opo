@@ -600,6 +600,7 @@ function ui_inventory.UIInventory:RMode_RepairYes()
 	end
 end
 
+
 EvaluateParts = item_parts.evaluate_parts
 
 function item_parts.evaluate_parts(obj)

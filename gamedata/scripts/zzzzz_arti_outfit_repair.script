@@ -28,6 +28,14 @@ function generate_readout(old, new)
 	return str
 end
 
+function item_repair.UIRepair:InitRepairInfo()
+	self.info = {}
+	self.info.xml = CScriptXmlInit()
+	self.info.xml:ParseFile("ui_repair_info.xml")
+	self.info.background = self.info.xml:InitStatic("background", self)
+    self.info.text = self.info.xml:InitTextWnd("repair:text_info" , self)
+	self.info.text:SetText("")
+end
 
 -- reject conflicts, return to monke
 RepairInitInv = item_repair.UIRepair.InitInventory
@@ -42,7 +50,11 @@ function item_repair.UIRepair:InitInventory(n)
         end
     end
 
-    if not_outfit then 
+    if not_outfit then
+		if self.info then
+			self.info.background:Show(false)
+			self.info.text:Show(false)
+		end
         RepairInitInv(self, n)
         return
     end
@@ -63,8 +75,12 @@ function item_repair.UIRepair:InitInventory(n)
 		
 		self.CC[1]:Reinit(inv)
 		if get_config("ui") then
-			repair_ui.start()
-			repair_ui.set_text("")
+			if not self.info then
+				self:InitRepairInfo()
+			end
+			self.info.background:Show(true)
+			self.info.text:Show(true)
+			self.info.text:SetText("")
 		end
 
 	-- Compatible part list to use
@@ -189,7 +205,8 @@ function item_repair.UIRepair:OnItemSelect(n)
 		self.text_item[2]:SetText("")
 	end
 	if get_config("ui") then
-		repair_ui.set_text(generate_readout(diff.old, diff.new))
+		self.info.text:SetText(generate_readout(diff.old, diff.new))
+		-- repair_ui.set_text()
 	end
 	self.btn_repair:Enable(true)
 end
@@ -197,9 +214,9 @@ end
 OnRepair = item_repair.UIRepair.OnRepair
 
 function item_repair.UIRepair:OnRepair()	
-	if get_config("ui") and not zz_item_repair_keep_crafting_window_open then -- Compatibility with Keep Crafting Window Open
-		repair_ui.close()
-	end
+	-- if get_config("ui") and not zz_item_repair_keep_crafting_window_open then -- Compatibility with Keep Crafting Window Open
+	-- 	repair_ui.close()
+	-- end
     OnRepair(self)
 	local obj_1 = self.CC[1]:GetCell_Selected(true)
 	local obj_2 = self.CC[2]:GetCell_Selected(true)
@@ -207,14 +224,6 @@ function item_repair.UIRepair:OnRepair()
         repair_parts(obj_1, self.obj:section(), obj_2)
         cap_condition(obj_1)
     end
-end
-
-RepairCancel = item_repair.UIRepair.OnCancel
-function item_repair.UIRepair:OnCancel()
-	if get_config("ui") then
-		repair_ui.close()
-	end
-	RepairCancel(self)
 end
 
 
