@@ -119,7 +119,7 @@ end
 GetPartsCon = item_parts.get_parts_con
 function item_parts.get_parts_con(obj, name, eval)
     local original_parts = GetPartsCon(obj, name, eval)
-    if IsOutfit(obj) then
+    if IsOutfit(obj) and original_parts then
         for k,v in pairs(original_parts) do
             original_parts[k] = math_floor(v)
         end
